@@ -1,0 +1,26 @@
+
+bad: 
+$(document).ready(function() {
+    return $("#movies_scroll .page").infinitescroll({
+      navSelector: "nav.pagination",
+      nextSelector: "nav.pagination a[rel=next]",
+      itemSelector: "#movies_scroll div.movie_blob_wrapper"
+    });
+});
+
+$(document).ready ->
+  $("#movies_scroll .page").infinitescroll
+    navSelector: "nav.pagination" # selector for the paged navigation (it will be hidden)
+    nextSelector: "nav.pagination a[rel=next]" # selector for the NEXT link (to page 2)
+    itemSelector: "#movies_scroll div.movie_blob_wrapper"  
+
+message: infinitescroll is not defined
+
+works:   
+  <script>
+   alert("Hello!"+<%=j @count.to_s%>);
+  </script>
+
+bad:  <%= render js: "alert('Hello: #{@count}')" %>
+
+

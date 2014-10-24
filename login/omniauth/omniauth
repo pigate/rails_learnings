@@ -1,0 +1,129 @@
+#src: http://asciicasts.com/episodes/241-simple-omniauth
+If you want to do without omniauth
+
+
+#assumes you have installed devise. If not,
+  #in Gemfile
+  gem 'devise'
+  #install devise
+  $rails g devise:install
+  #move over the devise views so that you can edit
+  $rails g devise:views #FIXME(??? check me)  
+
+#go get id's and secrets from facebook, twitter, google+, whatever
+	#save them 
+
+
+#To set up facebook,
+#FOR TESTING ON LOCALHOST:
+app_domain: #leave (BLANK)
+Try to find a place to add a website url.
+We had to '+ add platform' for that
+Website Url: http://localhost:3000 #yay! it works for us!
+
+We just have to switch it when we go into production mode.
+
+
+EXTRA:
+#use omniauth to sign in with external platforms
+#can have users then complete registration, upload profile pics, descriptions, etc. after signing in on 3rd party platofrm
+TIP:
+Just have a button where the user clicks to sign up with facebook and only after the callback present a form so the user can complete the registration process. The less scary your sign up process is, the more likely users are to go through with it. 
+
+#src: http://stackoverflow.com/questions/13978189/custom-fields-for-omniauth-sign-up
+
+Some setup you must do manually if you haven't yet:
+
+  1. Ensure you have defined default url options in your environments files. Here
+     is an example of default_url_options appropriate for a development environment
+     in config/environments/development.rb:
+
+       config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+
+     In production, :host should be set to the actual host of your application.
+
+  2. Ensure you have defined root_url to *something* in your config/routes.rb.
+     For example:
+
+       root to: "home#index"
+
+  3. Ensure you have flash messages in app/views/layouts/application.html.erb.
+     For example:
+
+       <p class="notice"><%= notice %></p>
+       <p class="alert"><%= alert %></p>
+
+  4. If you are deploying on Heroku with Rails 3.2 only, you may want to set:
+
+       config.assets.initialize_on_precompile = false
+
+     On config/application.rb forcing your application to not access the DB
+     or load models when precompiling your assets.
+
+  5. You can copy Devise views (for customization) to your app by running:
+
+       rails g devise:views
+
+#to set up omniauth and devise for google, I followed:
+#src: http://blogs.burnsidedigital.com/2013/03/rails-3-devise-omniauth-and-google/
+1. Create provider profiles and add your keys (place keys directly in file or set as environment variables (look up for windows, mac os. instructions for unix is at top of page)
+#config/initializers/devise.rb
+ config.omniauth :google_oauth2, '1063377016579-hs2v7pd59cenb3ir3jeppvnfmu230hme.apps.googleusercontent.com', '1TVsMxCy_cJIIG-Y9OuE0TIP'
+ config.omniauth :facebook, ENV['FACEBOOK_ID'], ENV['FACEBOOK_SECRET']
+end
+
+2. Set up Route and Callback Controller
+litterally create:
+  omniauth_callbacks_controller.rb
+
+class OmniauthCallbacksController < Devise::OmniauthCallbacksController
+  def google_oauth2
+    user = User.from_omniauth(request.env["omniauth.auth"])
+      if user.persisted?
+        flash.notice = "Signed in Through Google!"
+        sign_in_and_redirect user
+      else
+        session["devise.user_attributes"] = user.attributes
+       flash.notice = "You are almost Done! Please provide a password to finish setting up your account"
+       redirect_to new_user_registration_url
+    end
+  end
+
+  # .... one for every method like twitter, facebook... etc
+end
+
+3. If haven't already yet, create user or add the member variables, uid, provider, username, email
+  #if haven't created user yet:
+  rails g devise User
+  #else, add pertinent missing stuff to user
+  rails g migration add_important_stuff_to_user
+  #db/migrate/......add_important_stuff_to_user
+      def change
+        add_column :users, :uid, :string
+        add_column :users, :provider, :string
+        add_column :users, :username, :string
+        add_column :users, :email, :string
+        add_index :users, :email
+      end
+
+4. Make User able to use omniauth by adding ':omniauthable' to devise list
+#app/models/user.rb
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable, :omniauthable
+  #method to instantiate user after being signed in with omniauth on 3rd party server
+  def self.from_omniauth(auth)
+    if user = User.find_by_email(auth.info.email)
+      user.provider = auth.provider
+      user.uid = auth.uid
+      user
+    else
+      where(auth.slice(:provider, :uid)).first_or_create do |user|
+        user.provider = auth.provider
+        user.uid = auth.uid
+        user.username = auth.info.name
+        user.email = auth.info.email
+        #user.avatar = auth.info.image
+      end
+    end
+  end
+

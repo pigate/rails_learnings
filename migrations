@@ -1,0 +1,10 @@
+$ rails g migration add_user_id_to_movies
+
+#db/migrate/[ts]_add_user_id_to_movies.rb
+class AddUserIdToMovies < ActiveRecord::Migration
+  def change
+    add_column :movies, :user_id, :integer
+  end
+end
+
+

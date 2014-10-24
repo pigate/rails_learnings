@@ -1,0 +1,111 @@
+#src: https://www.youtube.com/watch?v=TSuMXVaIB9A
+do not use reserved words such as 'type' for column name.
+
+many-to-many is for back and forth relationships
+
+Eg) bookmarks can have multiple tags
+    tags are associated with many bookmarks
+
+    Is as if they belong together
+
+Eg) User can favorite a lot of stuff
+    You also want to see which users favorited which object
+
+    Is as if they belong together
+
+Eg) Doctors can have a lot of patients. Patients can have a lot of doctors.
+    Use appointments to keep track of doctor/patient meetings
+
+    Doctor has many patients through appointments
+    Patient has many doctors through appointments
+    Appointments belong to doctor and belong to patient
+  class Doctor <...
+    has_many :appointments
+    has_many :patients, :through => :appointments
+  end
+  class Patient <...
+    has_many :appointments
+    has_many :doctors, :through => :appointments
+  end
+
+belongs_to
+has_one
+has_many
+haS_many :through
+has_one :through
+has_and_belongs_to_many
+
+
+#Situation:
+#Movie can be of multiple genres
+#Users may want to search for movies in certain genre
+
+rails g scaffold Movies title:string
+rails g scaffold Genres name:string #do not use 'type' as column name
+#create table that keeps track of movie and genre
+rails g migration CreateGenresMovies #a table. suggested alphabetical order?
+#db/migrate/******create_genres_movies.rb
+class CreateGenresMovies < ...
+  def self.up
+    create_table :genres_movies, :id => false do |t|  
+      #use plural forms, and let's say 
+      #we don't need id's for the rows this time
+      t.integer :movie_id #singular
+      t.integer :genre_id 
+    end
+
+    #optional if want to get rid of hanging info
+    remove_column :movies, :genres
+    remove_column :genres, :movies
+
+    #important! for faster search
+    add_index :genres_movies, :genre_id
+    add_index :genres_movies, :movie_id
+    add_index :genres_movies, [:genre_id, :movie_id], unique: true
+  end
+
+
+  def self.down
+  #  add_column :movies, :genres, :string????X?X?X? no idea #optional if the optional line from above included
+  #  add_column :genres, :movies, :stirng???X?AGODFJ? no idea
+  
+    drop_table :genres_movies
+  end  
+end
+
+$ rake db:migrate
+
+#app/models/user.rb
+class User
+  has_many :movies
+  has_many :votes
+end
+
+#app/models/movie.rb
+class Movie <...
+  belongs_to :user
+  has_and_belongs_to_many :genres
+end
+#app/models/genre.rb
+class Genre < ...
+  has_and_belongs_to_many :movies
+end
+
+#example done in 
+#rails console
+$ m = Movie.new('title' => 'Lonely Girl')
+$ m.save
+$ m = Movie.first
+$ g = Genre.new('name' => 'horror')
+$ g2 = Genre.new('name' => 'suspense')
+$ g3 = Genre.new('name' => 'psychological')
+$ g.save
+$ g2.save
+$ g3.save
+$ m.genres << g
+$ m.genres << g2
+$ m.genres << g3
+# look up
+$ m.tags
+$ m.tags.create(:name => 'weird movie')
+

@@ -1,0 +1,26 @@
+#src: http://stackoverflow.com/questions/6003501/passing-instance-variable-to-js-erb-file-rails-3-jquery
+
+#see partials for a little more. look at #views/rating/create.js.erb for an example
+
+I have an "index.html.erb" file with the following:
+
+    <%= render @users %>
+
+This renders "_user.html.erb" and outputs a button for performing a certain action on each user:
+
+    <%= link_to "action", action_path(user), :id => "#{user.id}_action", :remote => true) %>
+
+I've set up my User controller to respond to the AJAX request by looking at "action.js.erb".
+
+In order to perform javascript methods on particular users within the partial, and I'd like to know how instance variables from my partial (such as user.id) can be passed into or accessed within the js.erb file, for instance:
+
+$("#{@user.id}_action").toggle();
+
+
+
+
+You access the information in your *.js.erb-files just like in your *.html.erb-files, using @users or other instance variables declared in the controller:
+
+$("#<%= @user.id %>_action").toggle();
+
+there's an excellent gem called gon that might simplify and organize things quite a bit: https://github.com/gazay/gon/blob/master/README.md

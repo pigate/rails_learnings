@@ -1,0 +1,344 @@
+#http://stackoverflow.com/questions/20046317/paper-trail-gem-uninitialized-constant-versionscontrollerversion
+#http://railscasts.com/episodes/255-undo-with-paper-trail?view=comments
+
+
+#for something about editing concurrently...
+#src: http://www.imdb.com/swiki/special?SynopsisHelp#.2.1.6
+
+
+with rails 4 #src: http://www.sitepoint.com/versioning-papertrail/
+#http://www.sitepoint.com/versioning-papertrail/
+
+Vestal does not seem to work. 
+#src: https://github.com/laserlemon/vestal_versions
+#src: http://asciicasts.com/episodes/177-model-versioning
+
+I used
+Paper Trail
+#http://railscasts.com/episodes/255-undo-with-paper-trail?view=comments
+#http://www.sitepoint.com/versioning-papertrail/
+
+#Gemfile
+gem 'paper_trail'
+
+
+rails g paper_trail:install
+rake db:migrate
+rails g controller versions
+
+#models/product.rb
+has_paper_trail
+
+
+#products_controller.rb
+
+def undo_link
+  view_context.link_to("undo", revert_version_path(@product.versions.scoped.last), :method => :post)
+
+  #  view_context.link_to("undo", revert_version_path(@product.versions.scoped.last), :method => :post) #doesn't work. undefined method 'scoped'
+end
+
+
+#config/routes.rb
+
+post "versions/:id/revert" => "versions#revert", :as => "revert_version"
+
+
+#versions_controller.rb
+
+def revert
+  @version = PaperTrail::Version.find(params[:id])
+  if @version.reify
+    @version.reify.save!
+  else
+    @version.item.destroy
+  end
+  link_name = params[:redo] == "true" ? "undo" : "redo"
+  link = view_context.link_to(link_name, revert_version_path(@version.next, :redo => !params[:redo]), :method => :post)
+  redirect_to :back, :notice => "Undid #{@version.event}. #{link}"
+end
+
+
+
+#products_controller.rb
+
+def create
+  @product = Product.new(@product_params)
+  if @product.save
+    respond_to |format| 
+      format.html { redirect_to products_path, notice: "Product created. #{undo_link}"}
+      format.js
+    else
+      format.html { redirect_to new_product, notice: "Error"}
+      format.js
+    end
+  end
+end
+
+
+
+>s = Product.last
+> l = s.versions.last
+> l.whodunnit
+ => "4" 
+> l.event
+ => "create" #update, destroy, etc
+>who = s.versions.map {|v| v.whodunnit}
+ => ["4", "4", "4", "4", "4", "4", "4", "4", "4", "4"] 
+
+> result = who.each_with_object(Hash.new(0)) {|id, counts| counts[id] += 1}
+ => {"4"=>10}
+
+  <% @versions = @spoiler.versions.reverse %>
+  <% @versions.each do |v| %>
+    <% if v[:object] != nil %>
+      <div id="synopsis_version_<%= v.id %>">
+         <%= v[:object].split(/\n[a-zA-Z]+\:/).last.split(/\n/).first %>
+      </div>
+      <%= v.event %>d by <%= link_to User.find(v.whodunnit).chosen_name, @last_user %>
+      <hr>
+    <% end %>
+  <% end %>
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################3
+#####################33
+######################3
+Vestal below. is not supported for rails 4
+#####################3
+#######################3
+
+
+In the Gemfile:
+gem 'vestal_versions', :git => 'git://github.com/laserlemon/vestal_versions'
+
+Next, generate and run the first and last versioning migration you'll ever need:
+
+$ rails generate vestal_versions:migration
+$ rake db:migrate
+
+To version an ActiveRecord model, simply add versioned to your class like so:
+
+class User < ActiveRecord::Base
+  versioned
+
+  validates_presence_of :first_name, :last_name
+
+  def name
+    "#{first_name} #{last_name}"
+  end
+end
+
+It's that easy! Now watch it in action…
+
+>> u = User.create(:first_name => "Steve", :last_name => "Richert")
+=> #<User first_name: "Steve", last_name: "Richert">
+>> u.version
+=> 1
+>> u.update_attribute(:first_name, "Stephen")
+=> true
+>> u.name
+=> "Stephen Richert"
+>> u.version
+=> 2
+>> u.revert_to(10.seconds.ago)
+=> 1
+>> u.name
+=> "Steve Richert"
+>> u.version
+=> 1
+>> u.save
+=> true
+>> u.version
+=> 3
+>> u.update_attribute(:last_name, "Jobs")
+=> true
+>> u.name
+=> "Steve Jobs"
+>> u.version
+=> 4
+>> u.revert_to!(2)
+=> true
+>> u.name
+=> "Stephen Richert"
+>> u.version
+=> 5
+
+
+The ability to completely skip versioning within a new skip_version block:
+
+@user.version # => 1
+@user.skip_version do
+  @user.update_attribute(:first_name, "Stephen")
+  @user.first_name = "Steve"
+  @user.save
+  @user.update_attributes(:last_name => "Jobs")
+end
+@user.version # => 1
+
+Version tagging. Any version can have a tag attached to it (must be unique within the scope of the versioned parent) and that tag can be used for reversion.
+
+@user.name # => "Steve Richert"
+@user.update_attribute(:last_name, "Jobs")
+@user.name # => "Steve Jobs"
+@user.tag_version("apple")
+@user.update_attribute(:last_name, "Richert")
+@user.name # => "Steve Richert"
+@user.revert_to("apple")
+@user.name # => "Steve Jobs"
+
+
+
+Resetting. This is basically a hard revert. The new reset_to! instance method behaves just like the revert_to! method except that after the reversion, it will also scrap all the versions that came after that target version.
+
+@user.name # => "Steve Richert"
+@user.version # => 1
+@user.versions.count # => 0
+@user.update_attribute(:last_name, "Jobs")
+@user.name # => "Steve Jobs"
+@user.version # => 2
+@user.versions.count # => 1
+@user.reset_to!(1)
+@user.name # => "Steve Richert"
+@user.version # => 1
+@user.versions.count # => 0
+
+
+Storing which user is responsible for a revision. Rather than introduce a lot of controller magic to guess what to store, you can simply update an additional attribute on your versioned model: updated_by.
+
+@user.update_attributes(:last_name => "Jobs", :updated_by => "Tyler")
+@user.versions.last.user # => "Tyler"
+
+
+
+Instead of passing a simple string to the updated_by setter, you can pass a model instance, such as an ActiveRecord user or administrator. The association will be saved polymorphically alongside the version.
+
+@user.update_attributes(:last_name => "Jobs", :updated_by => current_user)
+@user.versions.last.user # => #<User first_name: "Steven", last_name: "Tyler">
+
+
+
+Conditional version creation. The versioned method now accepts :if and :unless options. Each expects a symbol representing an instance method or a proc that will be evaluated to determine whether or not to create a new version after an update. An array containing any combination of symbols and procs can also be given.
+
+class User < ActiveRecord::Base
+  versioned :if => :really_create_a_version?
+end
+
+
+
+
+
+Soft Deletes & Restoration. By setting :dependent to :tracking destroys will be tracked. On destroy a new version will be created storing the complete details of the object with a tag of 'deleted'. The object can later be restored using the restore! method on the VestalVersions::Version record. The attributes of the restored object will be set using the attribute writer methods. After a restore! is performed the version record with the 'deleted' tag is removed from the history.
+
+class User < ActiveRecord::Base
+  versioned :dependent => :tracking
+end
+
+>> @user.version
+=> 2
+>> @user.destroy
+=> <User id: 2, first_name: "Steve", last_name: "Jobs", ... >
+>> User.find(2)
+=> ActiveRecord::RecordNotFound: Couldn't find User with ID=2
+>> VestalVersions::Version.last
+=> <VestalVersions::Version id: 4, versioned_id: 2, versioned_type: "User", user_id: nil, user_type: nil, user_name: nil, modifications: {"created_at"=>Sun Aug 01 18:39:57 UTC 2010, "updated_at"=>Sun Aug 01 18:42:28 UTC 2010, "id"=>2, "last_name"=>"Jobs", "first_name"=>"Stephen"}, number: 3, tag: "deleted", created_at: "2010-08-01 18:42:43", updated_at: "2010-08-01 18:42:43">
+>> VestalVersions::Version.last.restore!
+=> <User id: 2, first_name => "Steven", last_name: "Jobs", ... >
+>> @user = User.find(2)
+=> <User id: 2, first_name => "Steven", last_name: "Jobs", ... >
+>> @user.version
+=> 2
+
+eg) 
+gem 'vestal_versions', :git => 'git://github.com/laserlemon/vestal_versions'
+
+
+[0] $ rails generate vestal_versions:migration
+$ rake db:migrate
+
+
+[1] Adding versioning to our wiki pages (after the fact. previous pages won't get it yet)
+  #models/pages.rb
+class Pages < ...
+ versioned
+end 
+
+  Displays the version number on page... will not show if page was created before Page model was 'versioned'
+
+    <% title @page.name %>  
+    <p><%= simple_format wiki_link(h(@page.content))%></p>  
+    <p>  
+      <%= link_to "Edit", edit_page_path(@page) %>  
+      | Version <%= @page.version %>  
+    </p>  
+
+
+[2] To add versioning to existing pages, 
+
+$rails generate migration version_existing_pages
+
+    class VersionExistingPages < ActiveRecord::Migration  
+      def self.up  
+        say_with_time "Setting initial version for pages" do  
+          Page.find_each(&:touch)  
+        end  
+      end  
+      
+      def self.down  
+      end  
+    end  
+
+#Calling touch on a page will update its timestamp and will therefore trigger the versioning. Note that we’re using say_with_time to output a message from the migration to the console.
+
+$rake db:migrate
+
+When we edit the page, version number will now start to change
+
+[3] Look at previous version
+#in view, 
+    <% if @page.version > 1 %>  
+    | <%= link_to "Previous version", :version => @page.version-1 %>  
+    <% end %>  
+  # the link is only shown if the page has a previous version to show
+
+  #our controller will look for the correct version
+    def show  
+      @page = Page.find(params[:id])  
+      @page.revert_to(params[:version].to_i) if params[:version]  
+    end  
+
+[4] To look back at the newest version
+#in view
+    <% if params[:version] %>  
+      | <%= link_to "Latest version", :version => nil %>  
+    <% end %>  
+
+
+:first or :last to get the oldest or newest versions of a model.
+
+>> p.revert_to(:first)
+=> 1
+>> p.revert_to(:last)
+=> 2
+>> p.revert_to(60.minutes.ago)
+=> 1
+>> p.content
+=> "Welcome to out humble wiki where you can learn how to PurchasePianos,
+WriteMusic and PlayPiano. If you're just getting started, check out the
+BeginnerPiano page. Enjoy!"

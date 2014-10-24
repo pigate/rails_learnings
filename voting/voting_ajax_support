@@ -1,0 +1,95 @@
+
+
+#app/models/movie.rb
+
+class User <...
+  def voted_for?(movie)
+    votes.find_by(voted_movie_id: movie.id)
+  end
+  def vote!(movie)
+    votes.create!(voted_movie_id: movie.id)
+  end
+  def unvote!(movie)
+    votes.find_by(voted_movie_id: movie.id).destroy
+  end
+end
+
+#views/movies/index.html.erb
+ @movies.each do |m|
+  <div>
+    <%= m.name %>
+    <%= image_tag m.poster.url %>
+    <%= render 'vote_form' if signed_in? %>
+ end
+
+#views/movies/_vote_form.html.erb
+<% if signed_in? %>
+  <div id="vote_form">
+    <% if current_user.voted_for?(@movie) %>
+      <%= render 'unvote' %>
+    <% else %>
+      <%= render 'vote' %>
+    <% end %>
+  </div>
+<% end %>
+
+#config/routes.rb
+  resources :votes, only: [:create, :destroy]
+
+#views/movies/_vote.html.erb
+<%= form_for(@movie.votes.build(voter_id: current_user[:id]),
+             remote: true) do |f| %>
+  <div><%= f.hidden_field :voter_id %></div>
+  <%= f.submit "Vote!", class: "btn btn-large btn-primary" %>
+<% end %>
+
+
+#views/movies/_unvote.html.erb
+
+#calls VotesController.destroy
+#destroy will have to execute destroy.js.erb
+<%= form_for(@movie.votes.find_by(voter_id: @user.id),
+             html: { method: :delete },
+             remote: true) do |f| %>
+  <%= f.submit "Neutral", class: "btn btn-large" %>
+<% end %>
+
+
+#app/controllers/votes_controller.rb
+class VotesController < ApplicationController
+  before_action :signed_in_user
+
+  def create
+    @movie = Movie.find(params[:vote][:voted_movie_id])
+    @id = @movie.id
+    current_user.vote!(@movie)
+    respond_to do |format|
+      format.html { redirect_to @movie }
+      format.js #when use ajax, calls on this
+    end
+  end
+
+  def destroy
+    @movie = Movie.find(params[:voted_movie_id])
+    @id = @movie.id
+    current_user.unvote!(@movie)
+    respond_to do |format|
+      format.html { redirect_to @movie }
+      format.js
+    end
+  end
+end
+
+#################################################
+#app/views/relationships/create.js.erb
+
+$("#vote_form<%= escape_javascript(@id)%>").html("<%= escape_javascript(render('movies/unvote')) %>")
+$("#voters<%= escape_javascript(@id) %>").html('<%= @movie.voters.count %>')
+
+####################################################
+
+#app/views/relationships/destroy.js.erb
+
+$("#vote_form<%= escape_javascript(@id)%>").html("<%= escape_javascript(render('movies/vote')) %>")
+$("#voters<%= escape_javascript(@id)%>").html('<%= @movie.voters.count %>')
+

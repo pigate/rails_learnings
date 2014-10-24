@@ -1,0 +1,57 @@
+#if java/jquery not working for some inexplicable reason, could be turbolinks interference, esp. for dropdown lists not working
+#src: http://blog.steveklabnik.com/posts/2013-06-25-removing-turbolinks-from-rails-4
+
+Steve: If you don't want to use Turbolinks with your Rails 4 application, it's easy! Just do this:
+
+    [1]Remove the gem 'turbolinks' line from your Gemfile.
+    [2]Remove the //= require turbolinks from your app/assets/javascripts/application.js.
+    [3]Remove the two "data-turbolinks-track" => true hash key/value pairs from your app/views/layouts/application.html.erb.
+
+so, switch <%= javascript_include_tag 'application' %> 
+
+with  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+
+
+<%=j %> #used to escape js
+
+#in views/movies/newhtml.erb
+  <script>
+   alert("Hello!"+<%=j @count.to_s%>);
+  </script>
+
+
+$("#reviews").append("...")
+// Without escaping, you get a broken javascript string at href
+$("#reviews").append("<a href="/mycontroller/myaction">Action!</a>");
+  --> <a href=\"/mycontroller/myaction\">Action!</a>
+$("#reviews").append("<a href=\"/mycontroller/myaction\">Action!</a>")
+
+#rendering a partial within
+$("#reviews").append("<%= escape_javascript(render(:partial => @review)) %>");
+
+ the ruby part inside the <%= ... %>. What does render(:partial => @review) do? It is rendering a partial - which means that it could be rendering any kind of code - html, css ... or even more javascript!
+
+
+
+Problem:
+ = link_to @place.name, '#', onclick: 'get_maps(#{@location_string});'
+I'm currently trying to link to a javascript call with a rails variable argument but for some reason the rails variable @location_string isn't being passed to the javascript call with the variable in it. Currently it's being rendered as a string:
+
+<a href="#" onclick="get_maps(#{@location_string});">3308 Kanaina Ave</a>
+
+Solution:
+"get_maps('#{@location_string}');"
+
+
+Solution:
+  <%= javascript_tag do %>
+    myword = '<%= j task.description %>';
+    alert(myword);
+  <% end %>
+
+  <%= link_to "Greeting", '#', onclick: "update =  prompt('hello', '#{task.description}'); return false", class: "nav_link"%>
+  <%= link_to 'Destroy', task, method: :delete, data: {confirm: 'Are you sure?'}%></p>
+<%= link_to 'Back', tasks_path %>
+
+
+#in place editing

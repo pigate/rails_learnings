@@ -1,0 +1,88 @@
+If not using devise, make a sessions model, and create its controller.
+Otherwise, if [USING DEVISE], see devise/forwarding for an example.
+
+Only if SessionsHelper is included in ApplicationsHelper
+
+Controllers cannot call stuff from these helpers.
+
+If want controller to call some global method, put the methods in ApplicationsController
+
+
+module SessionsHelper
+  .
+  .
+  .
+  def deny_access
+    store_location
+    redirect_to signin_path, :notice => "Please sign in to access this page."
+  end
+
+  def redirect_back_or(default)
+    redirect_to(session[:return_to] || default)
+    clear_return_to
+  end
+
+  private
+    .
+    .
+    .
+    def store_location
+      session[:return_to] = request.fullpath
+    end
+
+    def clear_return_to
+      session[:return_to] = nil
+    end
+end
+
+class SessionsController < ApplicationController
+  .
+  .
+  .
+  def create
+    user = User.authenticate(params[:session][:email],
+                             params[:session][:password])
+    if user.nil?
+      flash.now[:error] = "Invalid email/password combination."
+      @title = "Sign in"
+      render 'new'
+    else
+      sign_in user
+      redirect_back_or user
+    end
+  end
+  .
+  .
+  .
+end
+
+class UsersController < ...
+  before_filter :authenticate, :only => [:edit, :update]
+  def authenticate
+    deny_access unless signed_in?
+  end
+end
+
+I want user when destroying a rating...
+
+To be redirected back to movies#show
+
+To be redirected back to users#show
+
+To be redirected back to users#ratings
+
+I want user when created a rating...
+
+To be redirected back to movies#show
+
+I want user when created a movie ...
+
+To be redirected to movies#show
+
+When user creates comment
+
+Redirect back to movies#show
+
+or Users#show
+
+When user writes message to another

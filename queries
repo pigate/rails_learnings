@@ -1,0 +1,64 @@
+#src guides.rubyonrails.org/active_record_querying.html
+
+//For performance reasons, batch operations. ascending order. Each record yielded individually as model
+
+User.find_each(batch_size: 2400) do |user|
+  NewLetter.weekly_deliver(user)
+end
+
+
+User.find_each(start: 2000, batch_size: 5000) do |user|
+  #start from the user starting with id 2000
+end
+
+User.find_each do |user|  #default batch size 1000
+  NewLetter.weekly_deliver(user)
+end
+
+//Find in batches. The difference: yields batches as array of models, instead of individually
+//Can also use :batch_size and :start options
+
+
+Invoice.find_in_batches(include: :invoice_lines) do |invoies|
+  export.add_invoices(invoices)
+end
+
+
+g = Genre.where(name: 'corn')
+g = Genre.where('name' => 'corn')
+g = Genre.find_by name: 'horror'
+g = Genre.where(name: 'corn', id: 15) #AND
+  if don't match anything, g== []   #true
+                           g === [] #true
+                           g === nil #false
+                           [] != nil
+Genre.where(id: 5..10) #range 5 inclusive 10
+Genre.where(id: [5, 6, 7, 8, 9, 10])
+
+g = Genre.first! #finds first record ordered by the primary key
+g = Genre.last! $finds last record ordered by primary key
+
+Genre.take(2) #get first 2
+Genre.last(2)
+
+
+
+
+
+
+@posts = Post.all
+@post = @post.where(:author_id => author_id) if author_id.present?
+@post = @post.where(:other_condition => other_value) if other_value.present?
+
+#for movies controller
+# GET /movies/1/edit
+edit already knows what @movie points to, maybe bc 'id' is already a param
+
+can do
+
+#app/controllers/movies_controller.rb
+def new
+  @movie = Movie.new #must have this
+  @genres = Genre.all #<----- YAY! can query another table
+end
+

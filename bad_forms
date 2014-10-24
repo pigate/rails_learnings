@@ -1,0 +1,93 @@
+http://stackoverflow.com/questions/9387020/using-multiple-classes-in-a-form-for-rails
+
+http://stackoverflow.com/questions/2034700/form-for-with-nested-resources
+
+#close, but still cannot pass any params :(
+
+     <%= form_for @movie_vote_to_make  do |f| %>
+        <% f.hidden_field :voted_movie_id, :value => m.id %>
+        <% f.hidden_field :voter_id, :value => 4 %>
+        <%= f.submit %>
+     <% end %>
+
+Couldn't find Movie without an ID
+Extracted source (around line #6):
+
+def create
+@movie_votes = MovieVote.new
+@movie = Movie.find(params[:voted_movie_id])
+@id = @movie.id
+current_user.vote!(@movie)
+respond_to do |format|
+
+
+
+
+app/controllers/movie_votes_controller.rb:6:in `create'
+
+Request
+
+Parameters:
+
+{"utf8"=>"✓",
+ "authenticity_token"=>"KDxHCbuDogBV90odxg+zaCtSb7cJwVgEb0DWFobzKso=",
+ "commit"=>"Create Movie vote"}
+
+#close, but cannot seem to pass any parameters :(
+
+<% @movies.each do |m| %>
+   Movie: <%= m.name %><br>
+   <% fourth= User.find(4) %>
+   Fourth user: <%= fourth.name %>
+   <br>
+   <% v = m.voters.where('id' => 4) %><br>
+   v: <%= v.name %><br>
+   <% if (v == [] || v == nil) %>
+      Voter(4) has not voted.
+     <%= form_for m.movie_votes.build, :voter_id => 4  do |f| %>
+       <%= f.submit %>
+     <% end %>
+   <% else %>
+      Hello voter(4) has voted.
+   <% end %>
+   <br>
+
+
+No route matches {:action=>"destroy", :controller=>"movie_votes", :method=>"DELETE"}
+
+<% @movies.each do |m| %>
+   <% v = m.voters.where('id' => 4) %>
+   <% if (v == [] || v == nil) %>
+     <%= form_tag(controller: "movie_votes", action: "destroy", method: "DELETE") do |f| %>
+       <% f.hidden_field :voted_movie_id, :value => m.id %>
+       <% f.hidden_field :voter_id, :value => 4 %>
+       <%= f.submit%>
+     <% end %>
+   <% else %>
+    <%= form_tag(controller: "movie_votes", action: "create", method: "POST") do
+ |f| %>
+       <% f.hidden_field :voted_movie_id, :value => m.id %>
+       <% f.hidden_field :voter_id, :value => 4 %>
+    <% end %>
+   <% end %>
+<% end %>
+
+
+
+<% @movies.each do |movie| %>
+<%= movie.name %>
+<%= link_to 'Show', movie %>
+Votes <%= movie.movie_votes.count %>
+<% form_tag('/movie_votes', vote_movie_id: movie.id, voter_id: 4)%>
+  if (movie.voters.where('id' => 4) != [] && movie.voters.where('id' => 4) != nil)
+   <%= link_to 'Destroy', movie.votes.where(voter_id: 4), method: :delete, data: {'delete vote?'} %>
+  <% else %>
+    <%= link_to 'Create', movie.votes, method: :post %>
+<% end %>
+<%= link_to 'Edit', edit_movie_path(movie) %>
+<%= link_to 'Destroy', movie, method: :delete, data: { confirm: 'Are you sure?' } %>
+<% end %>
+<br>
+
+<%= link_to 'New Movie', new_movie_path %>
+

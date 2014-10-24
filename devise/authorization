@@ -1,0 +1,15 @@
+#REMEMBER to add each controller into the config/routes.rb
+#controllers/home_controller.rb
+  before_filter :authenticate_user!, :only => :secret_page
+  def index
+
+  end
+
+  def secret_page
+    #only logged in people can access
+  end
+
+#app/views/home/secret_page.html.erb
+SECRET
+
+

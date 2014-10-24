@@ -1,0 +1,248 @@
+#setup: see, /naming_conventions
+#these all work
+
+#app/views/movies/index.html.erb
+<% @movies.each do |m| %>
+
+  <% v = m.voters.where('id' => 4) %>
+  <% if (v == [] || v == nil) %>
+     <%= form_for(m.movie_votes.build(voter_id: 4, voted_movie_id: m.id), remote:true) do |f| %>
+       <%= f.hidden_field :voter_id %>
+       <%= f.hidden_field :voted_movie_id %>
+       <%= f.submit "Vote today!" %>
+     <% end %>
+
+     <%= form_for @movie_vote_to_make, :remote_true  do |f| %>
+        <%= f.hidden_field :voter_id, :value => 4 %>
+        <%= f.hidden_field :voted_movie_id, :value => m.id %>
+        <%= f.submit %>
+     <% end %>
+
+     <%= form_for(m.movie_votes.build(voter_id: 4), :remote_true) do |f| %>
+       <%= f.hidden_field :voter_id %>
+       <%= f.hidden_field :voted_movie_id, :value => m.id %>
+       <%= f.submit "Vote today!" %>
+     <% end %>
+  <% else %>
+      <%= form_for(m.movie_votes.find_by(voter_id: 4, voted_movie_id: m.id),
+        html: { method: :delete }
+        ) do |f| %>
+        <%= f.submit "UnVote" %>
+      <% end %>
+<% end %>
+
+
+class MovieVotesController < ApplicationController
+  before_action :signed_in_user
+
+  def create
+    new_vote = MovieVote.new('voter_id' =>params[:movie_vote][:voter_id], 'voted_movie_id' => params[:movie_vote][:voted_movie_id])
+#    @movie_vote_to_make = MovieVote.new(movie_vote_params)
+    respond_to do |format|
+        if new_vote.save
+#      if @movie_vote_to_make.save
+          format.html { redirect_to movies_path, notice: 'Vote was created' }
+          format.js #when use ajax, calls on this
+	#format.js will call on create.js.erb (corresponds with method name 'create'
+	#all params will still be available!!! : D YAY!!!!
+	#See below... app/views/movie_votes/create.js.erb
+      else
+          format.html { redirect_to movies_path, notice: 'Vote not correctly saved' }
+          format.json { render json: @movie_vote_to_make.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  def destroy
+    MovieVote.find(params[:id]).destroy 
+    #destroy link will already navigate to the destroy method of this movie_vote
+#link will look like: localhost:###/movie_votes/:id
+	#so just get MovieVote.find(params[:id])
+    respond_to do |format|
+      format.html { redirect_to movies_path, notice: 'Vote succesfully destroyed'}
+      format.json { head :no_content}
+    end
+  end
+  private
+end                  
+
+#js used by ajax to update the page
+#app/views/movie_votes/create.js.erb
+$("#movies_index_vote_form_<%= params[:movie_vote][:voted_movie_id]%>").html("Just go it.")
+$("#movies_index_voter_names_<%= params[:movie_vote][:voted_movie_id] %>").html('Yo time to vote')
+
+#by looking at http requests, found that when click 'unvote' from movies#index, 
+#since a movie_vote was getting destroyed, had to
+#pull in the movie id by sneaking in as a movie_vote param. Yeah. dirty. oh well.
+#my var is m_id
+#it sneaks in as... params[:movie_vote][:m_id]
+#remember! only params persist throughout THE ENTIRE REQUEST.
+#not even local vars work...
+
+#just need to set vars you want in params[:movie_vote] in this case, for now...
+
+#app/views/movie_votes/destroy.js.erb
+$("#testing").html('hello');
+$("#movies_index_voter_names_<%= escape_javascript(params[:movie_vote][:m_id])%>").html('Destroyed yeah...');
+$("#movies_index_vote_form_<%= escape_javascript(params[:movie_vote][:m_id])%>").html("Destryoed");
+
+
+  <%= form_for(@current_user.votes.find_by(voted_movie_id: m.id),
+             html: { method: :delete },
+             remote: true) do |f| %>
+            <%= f.hidden_field :m_id, :value => m.id %>
+            <%= f.submit "Unvote" %>
+          <% end %>
+
+#create.html.erb
+$("#movies_index_vote_form_<%= params[:vote][:voted_movie_id]%>").html(
+ <%= render partial: "/movies/vote_form", locals: { m_id: params[:vote][:voted_movie_id]} %>
+);
+$("#movies_index_voters_count_<%= params[:vote][:voted_movie_id] %>").html(
+"Votes: "<%= Movie.find(params[:vote][:voted_movie_id]).votes.count%>
+);
+
+
+#destroy.html.erb
+$("#movies_index_voters_count_<%= escape_javascript(params[:vote][:m_id])%>").html(
+  "Votes: "<%=Movie.find(params[:vote][:m_id]).voters.count %>
+);
+
+$("#movies_index_vote_form_<%= escape_javascript(params[:vote][:m_id])%>").html(
+  <%= render partial: "movies/vote_form", locals: { m_id: params[:vote][:m_id]}  %>
+);
+
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+###########333
+##############3
+
+
+#using partials
+
+$app/views/movies$ ls
+_unvote.html.erb
+_vote_form.html.erb
+_vote.html.erb
+...
+
+#app/views/movies/_vote_form.html.erb
+<% if signed_in? %>
+  <div id="movies_vote_form_<%=m_id%>">
+  <% if !@current_user.voted_for_movie_of_id?(m_id) %>
+    <%= render partial: '/movies/vote', locals: {m_id: m_id, movie_vote: @movie_vote_to_build} %>
+  <% else %>
+    <%= @current_user.votes.count %> VOTES
+    <%= render partial: '/movies/unvote', locals: {m_id: m_id} %>
+  <% end %>
+  </div>
+<% end %>
+
+#app/views/movies/_vote.html.erb
+<%= form_for(current_user.votes.build(voted_movie_id: m_id), remote: true) do |f| %>
+  <%= f.hidden_field :voter_id, :value => @current_user.id %>
+  <%= f.hidden_field :voted_movie_id, :value => m_id %>
+  <%= f.hidden_field :m_id, :value => m_id %>
+  <%= f.submit "Vote" %>
+<% end %>
+
+#app/views/movies/_unvote.html.erb
+<%= form_for(@current_user.votes.find_by(voted_movie_id: m_id),
+  html: { method: :delete },
+  remote: true) do |f| %>
+  <%= f.hidden_field :m_id, :value => m_id %>
+  <%= f.submit "Unvote" %>
+<% end %>
+
+
+#app/views/movies/index.html.erb
+<% @movies.each do |m| %>
+  <% m_id = m.id %>
+    <div id="movies_index_vote_form_<%=m_id%>">
+        <%= render partial: "greeting", locals: { m_id: m_id } %>
+      <%= render partial: "/movies/vote_form", locals: { m_id: m_id } %>
+    </div>
+<% end %>
+
+
+#app/controllers/movies_controller.rb
+  def index
+    @movies = Movie.all
+    @movie_vote_to_build = Vote.new
+    @votes = Vote.all
+  end
+
+#app/controllers/votes_controller.rb
+class VotesController < ApplicationController
+  before_action :signed_in_user
+
+  def create
+    new_vote = Vote.new('voter_id' => params[:vote][:voter_id], 'voted_movie_id' => params[:vote][:voted_movie_id])
+    respond_to do |format|
+      if new_vote.save
+        format.html { redirect_to movies_path, notice: 'Thanks!'}
+        format.js
+      else
+        format.html { redirect_to movies_path, notice: 'You\'ve already voted. Thanks!'}
+        format.json { render json: @movie_vote_to_make.errors, status: :unprocessable_entity}
+      end
+    end
+  end
+
+  def destroy
+    Vote.find(params[:id]).destroy
+    respond_to do |format|
+      format.html { redirect_to movies_path, notice: 'Unvote done!'}
+      format.js
+    end
+  end
+end
+
+
+#app/views/votes/create.js.erb
+$("#test").html("KEtchup");
+$("#test<%= escape_javascript(params[:vote][:m_id])%>").html("PP");
+$("#movies_index_voters_count_<%= escape_javascript(params[:vote][:m_id]) %>").html("Dooby 9"+"<%= escape_javascript(params[:vote][:m_id])  %>");
+
+$("#movies_index_vote_form_<%= escape_javascript(params[:vote][:m_id])%>").html("<%= escape_javascript(render(:partial => '/movies/vote_form', :locals => {m_id: params[:vote][:m_id]})) %>");
+
+
+
+
+#app/views/votes/destroy.js.erb
+
+$("#test").html("Catsup");
+$("#test<%= escape_javascript(params[:vote][:m_id]) %>").html("OO");
+$("#movies_index_voters_count_<%= escape_javascript(params[:vote][:m_id]) %>").html("Dooby"+<%= escape_javascript(params[:vote][:m_id]) %>);
+
+$("#movies_index_vote_form_<%= escape_javascript(params[:vote][:m_id])%>").html("<%= escape_javascript(render(:partial => "/movies/vote_form", :locals => {m_id: params[:vote][:m_id]})) %>");
+

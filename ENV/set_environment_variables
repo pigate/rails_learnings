@@ -1,0 +1,46 @@
+#src: https://devcenter.heroku.com/articles/config-vars
+Best: Keep your keys out of your code.
+While working locally, can set environment vars in your 'bashrc'
+    
+home/.bashrc or wherever it is
+export MY_VAR="123" #no spaces
+On heroku, use config vars
+
+$ heroku config:set BLAHBLAH=blohlblhoajojo
+$ heroku config:get BLAHBLAH
+       blohlblhoajojo
+heroku config:unset BLAHBLAH #to undo
+
+You can also edit config vars on your app's settings on heroku dashboard.
+
+Whenever you set or remove a config var, your app will restart
+
+access your vars with something like: ENV['KEY']
+
+Should be able to this in other rails environments
+
+
+eg) 
+Rails.application.config.middleware.use OmniAuth::Builder do
+  provider :google_auth2, ENV["GOOGLE_CLIENT_ID"], ENV["GOOGLE_CLIENT_SECRET"]
+end
+
+heroku config:set S3_KEY=8N029N81 S3_SECRET=9s83109d3+583493190
+Adding config vars and restarting myapp... done, v14
+S3_KEY:   8N029N81
+S3_SECRET: 9s83109d3+583493190
+
+so that when you write some initialize, it can look like:
+AWS::S3::Base.establish_connection!(
+ :access_key_id   => ENV['S3_KEY'],
+ :secret_access_key => ENV['S3_SECRET']
+)
+
+In Java, you can access it through calls to System.getenv('key'), like so:
+S3Handler = new S3Handler(System.getenv("S3_KEY"), System.getenv("S3_SECRET"))
+
+In Python, 
+s3 = S3Client(os.environ['S3_KEY'], os.environ['S3_SECRET'])
+
+Now, upon deploying to Heroku, the app will use the keys set in the config.
+

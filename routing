@@ -1,0 +1,11 @@
+No routing matches [PATCH] for '/users'
+#src = http://stackoverflow.com/questions/21213230/routing-error-no-route-matches-patch-locations
+
+<--- messed with paperclip setup thoguh
+
+
+  resources :sessions, only: [:new, :create, :destroy]
+  match '/signin', to: 'sessions#new', via: 'get'
+  match '/signout', to: 'sessions#destroy', via: 'delete'
+
+Note that the routes for signin and signout are custom, but the route for creating a session is simply the default (i.e., [resource name]_path).

@@ -1,0 +1,36 @@
+#src: http://stackoverflow.com/questions/3498081/rails-how-to-setup-model-that-can-belong-to-either-of-3-different-models
+
+
+Can use a polymorphic relationship for a model that belongs to multiple types.
+
+Polymorphism: An OOP concept in which a common interface is used to multiple model types.
+
+In other languages, the interface will provide common methods, accessors, etc.
+
+Run-time typing.
+
+
+In RoR, on the surface, a model type object can only belong to 1 type at a time, not multiple types at a time. So, we let it believe so, by 
+
+eg)
+
+Comment can belong to MovieReview, UserProfilePage, or TheatreReview
+
+rails g model Comment comment_text:text commentable_id:integer commentable_type:string
+
+class Comment
+  belongs_to :commentable, :polymorphic => true
+end
+
+class MovieReview
+ has_many :comments, as: => :commentable
+end
+
+class UserProfilePage
+  has_many :comments, as: => :commentable
+end
+
+class TheatreReview
+  has_many :comments, as: => :commentable
+end
+

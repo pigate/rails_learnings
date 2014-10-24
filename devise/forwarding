@@ -1,0 +1,58 @@
+#src rails_projects/canyon
+#src: http://stackoverflow.com/questions/6355107/rails-3-devise-with-omniauth-redirect-after-signing-in-goes-to-users-sign-i
+#src: https://github.com/plataformatec/devise/search?utf8=%E2%9C%93&q=after_sign_in_path_for%28resource%29
+
+What I did:
+[1] add store_location and deny_access and authenticate methods to application controller to let it be globally available.
+[2] Override part of the devise's sessions controller so that it would redirect to what I want. 
+[3] In config/routes.rb, I tell routing to use my override version of sessions controller in place of devise's sessions controller
+[4] Add authentication to whatever controller methods I see fit. 
+    Tends to work best on [:new, :edit, :create, :update, :destroy]
+
+[1] 
+class ApplicationController < ActionController::Base
+  # Prevent CSRF attacks by raising an exception.
+  # For APIs, you may want to use :null_session instead.
+  protect_from_forgery with: :exception
+
+  #[1]should forward back to page when destroying something
+  #[2]should forward back when press back button
+  def store_location
+    session[:return_to] = request.fullpath
+  end
+  def clear_return_to
+    session[:return_to] = nil
+  end
+  def deny_access
+    store_location
+    redirect_to new_user_session_path
+  end
+  def redirect_back_or(default)
+    redirect_to(session[:return_to] || default)
+    clear_return_to
+  end
+  def authenticate
+    deny_access unless user_signed_in?
+  end
+
+end
+
+[2]
+class SessionsController < Devise::SessionsController
+  respond_to :html, :json
+
+  protected
+    def after_sign_in_path_for(resource)
+      session[:return_to] || genres_path
+    end
+end
+~         
+
+[3]
+#config/routes
+  devise_for :users, controllers: { omniauth_callbacks: "omniauth_callbacks", registrations: "registrations", sessions: "sessions" }
+
+[4]
+class MoviesController < ApplicationController
+  before_action :set_movie, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate, only: [:new, :edit, :create, :update, :destroy]

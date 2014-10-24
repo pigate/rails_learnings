@@ -1,0 +1,7 @@
+$rails g scaffold Profile user_id:integer
+$rake db:migrate
+#app/models/user.rb
+  has_one :profile, dependent: :destroy
+#app/models/profile.rb
+  belongs_to :user
+

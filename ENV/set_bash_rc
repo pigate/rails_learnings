@@ -1,0 +1,5 @@
+bashrc is usually in your home directory. When you ls, it will not pop up. 
+You can concatenate something to it,
+or you may manually append to it.
+
+When you make a change, restart all your terminals so that bash gets a chance to... refresh(?) and see the changes.

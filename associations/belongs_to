@@ -1,0 +1,39 @@
+#when making a User has_many, has_one... and Movie belongs_to User rxp...
+#for the migration on the belongs_to side, as in the movie migration, add the belongs_to part... or can add in a field, user_id
+
+eg)
+[M1]
+$ rails g scaffold User name:string
+$ rails g scaffold Movie name:string user_id:integer
+$ rake db:migrate
+
+[M2]
+$ rails g scaffold User name:string
+$ rails g scaffold Movie name:string
+$ vim db/migrate/[ts]_create_movie.rb
+def change
+  create table movie do |t|
+    t.belongs_to :user
+    t.string:name
+    ...
+  end
+end
+
+
+For both [M1], [M2]
+#app/models/user.rb
+class User <...
+  has_many :movies
+end
+
+class Movie <...
+  belongs_to :user
+end
+
+#to check
+$ rails c
+#  m = Movie.first
+#  m.user #belongs_to  (one) user
+#  u = User.first
+#  u.movies #has_many
+#for Movie and genres, if movie can belong to multi genres, and genres can have multi movies, use many-to-many rxp. has_many_and_belongs_to (HABTM)

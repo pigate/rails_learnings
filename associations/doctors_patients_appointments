@@ -1,0 +1,69 @@
+#src= http://davidpots.com/blog/rails-basics-has-many-through/
+
+#[1] create models using scaffold template
+rails g scaffold Doctor name:string
+rails g scaffold Patient name:string
+rails g scaffold Appointment doctor_id patient_id appointment_time:date_time
+
+rake db:migrate
+
+#[2] fill in associations
+#model/appointment.rb
+class Appointment <...
+  belongs_to :doctor
+  belongs_to :patient
+end
+
+#model/patient.rb
+class Patient <...
+  has_many :appointments
+  has_many :doctors, through: :appointments
+end
+
+#model/doctor.rb
+class Doctor < ...
+  has_many :appointments
+  has_many :patients, through: :appointments
+end
+
+#[3] check
+$ rails c
+p = Patient.find(1)
+p.appointments
+p.doctors
+p.doctors.find(1).appointments
+
+
+=================
+
+eg)
+#[1]
+scaffold Movie, name:string
+scaffold User, name:string
+model MVote, movie_id:integer, user_id:integer
+
+#[2]
+class MVote < ActiveRecord::Base
+  attr_accessible :user_id, :movie_id
+  belongs_to :user
+  belongs_to :movie
+end
+
+class User < ActiveRecord::Base
+  has_many :m_votes
+  has_many :movies, :through => :m_votes
+end
+
+class Movie < ActiveRecord::Base
+  has_many :m_votes
+  has_many :users, :through => :m_votes
+end
+
+#[3] check
+MVote.new('user_id' => 1, 'movie_id' => 2).save
+m = Movie.first
+m.m_votes
+m.users
+~           
+
+

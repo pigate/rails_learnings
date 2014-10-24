@@ -1,0 +1,33 @@
+# src: http://code.tutsplus.com/tutorials/using-unobtrusive-javascript-and-ajax-with-rails-3--net-15243
+#if using some sort of form to create object, if want, when create, to stay on page and possibly call on something java-y to happen, do the following:
+
+app/views/users/_form.html.erb
+<%= form_for(@user, :remote => true) do |f| %>
+
+...
+  <div class="actions">
+   <%= f.submit %>
+  </div>
+<% end %>
+
+#when this submits, say, we want some js to be called. 
+#in app/controllers/users_controller.rb
+def create
+  #add this if not there
+  respond_to do |format| #it responds to submit from forms
+    if @user.save #success!
+      format.html { redirect_to users_path, notice: "User creation success!"}
+      format.json { render :show, status: :created, location: @user}
+      format.js #this is the most important!
+        #when add this, when form submitted, controller looks automatically to 
+        #  create.js.erb for js to execute
+	#note, ^------method name
+    else
+     #do other stuff...
+    end
+  end
+end
+
+#Now you have to have create.js.erb sitting in same folder as the view
+#  app/views/users/create.js.erb
+$().function stuff!!! yay!!!

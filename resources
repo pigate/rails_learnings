@@ -1,0 +1,32 @@
+
+Create a new type of object with
+rails g scaffold DailyTasks description:string user_id:integer<--- initializes database table for it
+
+Read up on migrations: make changes to our resources
+
+bundle exec rake db:migrate #push through the changes
+rake db:rollback #undo 
+Constraints are written into app/models/daily_task.rb
+
+class Daily_Task < ActiveRecord::Base
+  belongs_to :user
+  validates :content, length: { maximum: 140 }
+  validates :image_url, format: { with: %r{\.(png|gif|jpeg)\z/}i, on: :create}
+
+end
+
+class User < ActiveRecord::Base
+  validates :first_name, length: {minimum: 2}, presence: true
+  validates :last_name, length: {minimum: 1}, presence: true
+  validates :pw, length: { minimum: 8}
+  validates :nickname, uniqueness:true
+  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
+  validates :email, uniqueness: true, presence: true, format: { with: VALID_EMAIL_REGEX}
+  VALID_PASS_REGEX_UPCase = /[A-Z]/i
+  VALID_PASS_REGEX_DOWNCase = /[a-z]/i
+  VALID_PASS_REGEX_NUM = /[0-9]/i
+  VALID_PASS_REGEX_SPECIAL = /[!@#$&*]/i
+  validates :pw, format: {with: VALID_PASS_REGEX_UPCase }, format: {with: VALID_PASS_REGEX_DOWNCase}
+  validates :pw, format: {with: VALID_PASS_REGEX_NUM}, format: {with: VALID_PASS_REGEX_SPECIAL}
+end
+~                

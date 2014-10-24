@@ -1,0 +1,36 @@
+#src: http://www.theodinproject.com/ruby-on-rails/sessions-cookies-and-authentication
+
+cookies[:name] = { :value => "cookies YUM", :expires => Time.now + 3600}
+#cookies are important -- they allow you to keep track of your user from one request to another until the cookie expires
+
+Rails stores a special secure and tamper-proof cookie on the user's browser that contains their entire session hash (look for it in your developer tools, usually under the "Resources" section) and it expires when the browser is closed. 
+
+request will also automatically include that session cookie (along with the other cookies) and you can use it to keep track of her logged-in state.
+
+need both cookies and sessions
+session is an entire hash that gets put in the secure session cookie that expires when the user closes the browser. 
+
+If you look in your developer tools, the "expiration" of that cookie is "session". Each value in the cookies hash gets stored as an individual cookie
+
+So cookies and sessions are sort of like temporary free database tables for you to use that are unique to a given user and will last until you either manually delete them, they have reached their expiration date, or the session is ended (depending what you specified). 
+
+NOTE:
+size-limited in terms of how much you can store inside a session hash or browser cookie (~4kb)
+
+
+eg)
+    # app/controllers/users_controller.rb
+    ...
+    # Set a session value
+    session[:current_user_id] = user.id
+
+    # Access a session value
+    some_other_variable_value = session[:other_variable_key]
+
+    # Reset a session key
+    session[:key_to_be_reset] = nil
+
+    # Reset the entire session
+    reset_session
+
+

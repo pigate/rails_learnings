@@ -1,0 +1,61 @@
+#Admin permissions. toggle.
+#TODO : Admin should not be able to delete himself.
+#TODO : Admin can toggle anyone else's admin status
+
+$ rails generate migration add_admin_to_users admin:boolean
+#in db/migrate/[timestamp]_add_admin_to_users.rb
+
+class AddAdminToUsers < ActiveRecord::Migration
+  def change
+    add_column :users, :admin, :boolean, default: false
+  end
+end
+
+#precaution, do not include 'admin' attr as permit in user_params.
+patch /users/17?admin=1 #or else MALICIOUS hacker can do this
+#do it like the following:
+#in app/controllers/users_controller.rb
+
+
+    def user_params
+      params.require(:user).permit(:name, :email, :password,
+                                   :password_confirmation)
+    end
+	#NOTE absence of 'admin'
+
+#so can now do this in rails c
+>> user = User.first
+>> user.admin?
+=> false
+>> user.toggle!(:admin)
+=> true
+>> user.admin?
+=> true
+
+#so admin doesn't delete himself, but reg users can delete themselves
+<% if (current_user.admin? && !current_user?(user)) || ( !current_user.admin && current_user?(user)) %>
+        <td><%= link_to 'Edit', edit_movie_path(movie) %></td>
+        <td> <%= link_to "delete", user, method: :delete,
+                                  data: { confirm: "You sure?" } %></td>
+
+#in sessions_helper.rb for globally available functions
+#remember to include SessionsHelper   in applications_controller.rb
+...
+   def admin_user
+     current_user.admin
+   end
+...
+
+
+#admin and correct user has acces to this:
+class UsersController <...
+  before_action :signed_in_user, only: [:index, :edit, :update, :destroy]
+  before_action :correct_user,   only: [:edit, :update, :destroy]
+  before_action :admin_user,     only: :destroy
+  def destroy
+    User.find(params[:id]).destroy
+    flash[:success] = "User deleted."
+    redirect_to users_url
+  end
+
+

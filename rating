@@ -1,0 +1,32 @@
+  <% i = 0 %>
+  <% while(i < 4) %>
+    <a href="#"><img id="star_<%=i%>" onmouseover="blackImg(<%=i%>);"
+ onmouseout="greyImg(<%=i%>);" onclick="blackImg(<%=i%>);"  src="/assets/greystar.png"/></a>
+    <% i += 1 %>
+  <% end %>
+  <% while(i < 10) %>
+    <a href="#"><img id="star_<%=i%>" onmouseover="goldImg(<%=i%>);" src="/assets/greystar.png"/></a>
+    <% i += 1 %>
+  <% end %>
+
+#doesn't work very well. :( 
+
+<script type="text/javascript">
+function greyImg(x) {
+  for(var j = 0; j <= x; j++){
+    document.getElementById("star_"+j).src = "/assets/greystar.png";
+  }
+}
+function blackImg(x) {
+  for(var j = 0; j <= x; j++){
+    document.getElementById("star_"+j).src = "/assets/blackstar.png";
+  };
+}
+function goldImg(x) {
+  for(var j = 0; j <= x; j++){
+    document.getElementById("star_"+j).src = "/assets/goldstar.png";
+  };
+}
+
+</script>
+

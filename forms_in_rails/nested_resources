@@ -1,0 +1,116 @@
+#src: http://stackoverflow.com/questions/2034700/form-for-with-nested-resources
+
+resources :comments
+resources :articles do
+  resources :comments, :only => [:create, :index, :new]
+end
+
+You get paths like:
+
+/articles/42
+/articles/42/comments/99
+
+routed to controllers at
+
+app/controllers/articles_controller.rb
+app/controllers/comments_controller.rb
+
+just as it says at http://guides.rubyonrails.org/routing.html#nested-resources, with no special namespaces.
+
+But partials and forms become tricky. Note the square brackets:
+
+<%= form_for [@article, @comment] do |f| %>
+
+Most important, if you want a URI, you may need something like this:
+
+article_comment_path(@article, @comment)
+
+Alternatively:
+
+[@article, @comment]
+
+as described at http://edgeguides.rubyonrails.org/routing.html#creating-paths-and-urls-from-objects
+
+For example, inside a collections partial with comment_item supplied for iteration,
+
+<%= link_to "delete", article_comment_path(@article, comment_item),
+      :method => :delete, :confirm => "Really?" %>
+
+
+
+Method 2:
+
+
+You don't need to do special things in the form. You just build the comment correctly in the show action:
+
+class ArticlesController < ActionController::Base
+  ....
+  def show
+    @article = Article.find(params[:id])
+    @new_comment = @article.comments.build
+  end
+  ....
+end
+
+and then make a form for it in the article view:
+
+<% form_for @new_comment do |f| %>
+   <%= f.text_area :text %>
+   <%= f.submit "Post Comment" %>
+<% end %>
+
+by default, this comment will go to the create action of CommentsController, which you will then probably want to put redirect :back into so you're routed back to the Article page.
+
+
+
+ Jam's way works, but you can end up with extra routes that you probably don't know about. It's better to be explicit. –  cdunn2001 Jun 28 at 19:13 
+
+
+
+:::::::::::::::::::::::::::::::::::::::::::;;
+::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+
+:::::::::::::::::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::;
+
+
+
+
+::::::::::::::::::::::::::::::::::::::::::::::;
+:::::::::::::::::::::::::::::::::::::::::::::::
+
+
+
+Method 2: Jam's way::
+Interestingly, I just learned that most people's unit-tests are not actually testing all paths. When people follow jamisbuck's suggestion, they end up with two ways to get at nested resources. Their unit-tests will generally get/post to the simplest:
+
+# POST /comments
+post :create, :comment => {:article_id=>42, ...}
+
+In order to test the route that they may prefer, they need to do it this way:
+
+# POST /articles/42/comments
+post :create, :article_id => 42, :comment => {...}
+
+I learned this because my unit-tests started failing when I switched from this:
+
+resources :comments
+resources :articles do
+  resources :comments
+end
+
+to this:
+
+resources :comments, :only => [:destroy, :show, :edit, :update]
+resources :articles do
+  resources :comments, :only => [:create, :index, :new]
+end
+
+I guess it's ok to have duplicate routes, and to miss a few unit-tests. (Why test? Because even if the user never sees the duplicates, your forms may refer to them, either implicitly or via named routes.) Still, to minimize needless duplication, I recommend this:
+
+resources :comments
+resources :articles do
+  resources :comments, :only => [:create, :index, :new]
+end

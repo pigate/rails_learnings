@@ -1,0 +1,32 @@
+Problem: $(...).infinitescroll is not a function
+
+Situation: using coffeescript to generate my javascript
+Took off turbolinks so that I can use $(document).ready
+
+
+HOw I fixed: 
+Got rid of coffeescript. Converted back to actual javascript <-- Works!
+Coffeescript was adding junk and made it break :(
+
+
+
+########################33
+
+possible: but didn't actually happen...
+
+
+could be jquery loading twice. 
+From precompilation
+and other stuff.
+
+
+
+I went into tmp/ and deleted some stuff in there
+
+#jQuery ->
+$(document).ready ->
+  $("#movies_scroll .page").infinitescroll
+    navSelector: "nav.pagination" # selector for the paged navigation (it will be hidden)
+    nextSelector: "nav.pagination a[rel=next]" # selector for the NEXT link (to page 2)
+    itemSelector: "#movies_scroll div.movie_blob_wrapper" # selector for all items you'll retrieve
+

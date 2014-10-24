@@ -1,0 +1,51 @@
+#for admin, see src: admin
+
+#assuming we have sessions and users
+#see /users/secure_login or secure_signin for more info
+
+	#assuming global access. function,  'signed_in?'
+
+#To require signed in user for certain method of controller
+#Use before_action in controllers
+
+#in app/controllers/group_pictures_controller.rb
+class GroupPicture < ...
+  before_action :signed_in_user, only: [:edit, :update]
+
+  private
+  def signed_in_user
+    redirect_to signin_url, notice: "Please sign in." unless signed_in?
+  end
+
+#requiring correct user
+#in app/controllers/users_controller.rb
+class UsersController <...
+  before_action :signed_in_user, only: [:edit, :update]
+  before_action :correct_user, only: [:edit, :update]
+ 
+ private
+  def signed_in_user
+    redirect_to signin_url, notice: "Please sign in." unless signed_in?
+  end
+ 
+  def correct_user
+    @user = User.find(params[:id])
+    redirect_to(root_url) unless current_user?(@user)
+  end
+end
+
+
+#eg) cannot edit movie unless you are movie's creator/
+#prior setup: movie belongs_to user
+#		user has_many movies
+class MoviesController <...
+  before_action :movie_correct_user, only: [:edit, :update, :destroy]
+
+  private
+    def movie_correct_user
+      @movie = Movie.find(params[:id])
+      if !(current_user?(@movie.user))
+        redirect_to root_url, notice: "Not your movie!"
+      end
+    end
+end

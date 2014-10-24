@@ -1,0 +1,81 @@
+#NOTE: all of callbacks must be done in model file
+
+#remove beginning and end spaces, and squishes multiple contiguous spaces into 1 space
+gsub(/[\s]$/,'').gsub(/^[\s]/,'').gsub(/[\s]{2,}/,' ')
+
+The way to actually modify the model instance''s fields is to call on 'self'
+#app/models/rating.rb
+  before_validation { review_is_present }
+
+  def review_is_present
+    if !!self.review.match(/[^\s]/)
+      self.review_present = true
+      #review_present = true #does not work at all without 'self'
+    else
+      self.review_present = false
+    end
+    return true
+  end
+#src = http://api.rubyonrails.org/classes/ActiveRecord/Callbacks.html
+#before_save is done after validations
+
+before_validation
+  @executed before the validation
+after_validaion
+before_save
+before_create
+after_save
+after_create
+
+* before_validation
+* after_validation
+* before_save
+* after_save
+* before_create
+* around_create
+* after_create
+
+#doesn't work for me :(
+#app/models/task.rb #NOTE: only do before_save stuff and validates in models file
+class Task < ActiveRecord::Base
+  before_save { |task| task.name = task.name.downcase }
+
+  private
+    def downcase_name
+      self.name = self.name.downcase
+    end
+end
+
+#WORKS
+#in app/models/genre.rb
+class Genre < ActiveRecord::Base
+  #IMPORTANT!
+  before_validation :downcase_name
+
+  validates :name, presence: true, uniqueness: true
+  has_and_belongs_to_many :movies
+
+  #need at least before_save! create is for first time instance
+  #save is for all instances of creation, update, edit, etc
+  before_save { |genre| genre.name = genre.name.downcase}
+  before_create :downcase_name #just to show we can include some function
+  #before
+  private
+   def downcase_name
+     self.name = self.name.downcase
+   end
+end
+
+#validation with a custom method
+#models/actor.rb
+  validate :unique_firstlast_and_birthday_or_stage_name
+
+  def unique_firstlast_and_birthday_or_stage_name
+    other = Actor.where('first' => first, 'last' => last).select {|a| a.id != id}
+    other_with_birthday = other.select {|a| a.birthday == birthday}
+    other_with_stage_name = other.select { |a| a.stage_name == stage_name }
+    if other_with_birthday.count > 0 || other_with_stage_name.count > 0
+      errors.add(:actor, ": Duplicate actor/actress found")
+    end
+  end
+

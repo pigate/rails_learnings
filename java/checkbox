@@ -1,0 +1,23 @@
+<%= check_box_tag g.name, g.name, :checked => true, :class => "checkbox" %>
+<%= check_box_tag g.name, g.name, false, :class => "checkbox" %>
+
+
+<%= check_box_tag "all_checked", "true", false, :class => "checkbox_all" %>All<br>
+
+#somewhere lower in the page
+
+<script type="text/javascript">
+  $("#check_all").on("click", function() { 
+      $('input[type="checkbox"]').each.attr("checked", true);
+  });
+  $(".checkbox_all").on("click", function() {
+    var boxes = $('input[type="checkbox"]');
+    var allstate = document.getElementsByClassName("checkbox_all");
+    var state = allstate[0].checked;
+    var i = 0;
+    for(; i < boxes.length; i++){
+      boxes[i].checked = state;
+    }
+  });
+</script>
+

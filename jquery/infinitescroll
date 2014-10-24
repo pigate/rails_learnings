@@ -1,0 +1,85 @@
+#to mess with kaminara (pagination)
+#src: http://patshaughnessy.net/2011/9/10/how-does-kaminari-paginate
+
+#src: https://github.com/amatsuda/kaminari/wiki/How-To:-Create-Infinite-Scrolling-with-jQuery
+
+#use gem 'kaminari'
+
+gem 'kaminari'
+bundle install
+$ curl -k -o vendor/assets/javascripts/jquery.infinitescroll.js https://raw.githubusercontent.com/paulirish/infinite-scroll/master/jquery.infinitescroll.js
+echo "//= require jquery.infinitescroll" >> app/assets/javascripts/application.js
+$ rails generate scaffold Post title:string author:string body:text
+$ rake db:migrate
+db/seeds.rb file:
+
+require 'securerandom'
+
+75.times do
+  Post.create(
+    :title => "My Post #{SecureRandom.hex(2)}",
+    :author => SecureRandom.hex(6),
+    :body => SecureRandom.hex(32)
+  )
+end
+
+$rake db:seed
+
+#app/controllers/posts_controller.rb
+
+def index
+  @posts = Post.order(:created_at).page(params[:page])
+  @posts = Post.where("age >=?", 21).page(params[:page]).per(5)
+end
+
+#views/posts/index.html.erb
+<div id="posts">
+  <div class="page">
+    <%= render @posts %>
+  </div>
+</div>
+
+<%= paginate @posts %>
+
+#create a partial for the post
+#views/posts/_post.html.erb
+<div class="post">
+  <%= post.name %>
+</div>
+#movies_index_box
+
+
+#views/posts/index.js.erb
+$("#posts").append("<div class='page'><%= escape_javascript(render(@posts)) %></div>");
+
+#movie_scroll
+
+# .page => .page
+#post => .movies_index_box
+#posts => #movies_scroll
+
+# app/assets/javascripts/posts.js.coffee
+
+$(document).ready ->
+  $("#posts .page").infinitescroll
+    navSelector: "nav.pagination" # selector for the paged navigation (it will be hidden)
+    nextSelector: "nav.pagination a[rel=next]" # selector for the NEXT link (to page 2)
+    itemSelector: "#posts tr.post" # selector for all items you'll retrieve
+
+#although I kind of failed to produce,
+#If need to change anything in the jquery, go to myapp/vendors/assets/javascripts/...
+
+ $.infinitescroll.defaults = {
+        loading: {
+            finished: undefined,
+            finishedMsg: "<em>Congratulations, you've reached the end of the internet.</em>",
+
+   // Fundamental aspects of the plugin are initialized
+        _create: function infscr_create(options, callback) {
+
+            // Add custom options to defaults
+            var opts = $.extend(true, {}, $.infinitescroll.defaults, options);
+            this.options = opts;
+            var $window = $(window);
+            var instance = this;
+

@@ -1,0 +1,30 @@
+rails new appname --database=postgresql 
+heroku create thebestapp
+cd appname
+git init
+#do stuff
+git add .
+git commit -m "I've committed!"
+
+git remote -v #if nothing , add remote
+
+git remote add heroku git@heroku.com:thebestapp.git 
+http://ooauth.herokuapp.com/ | git@heroku.com:ooauth.git
+http://ddauth.herokuapp.com/ | git@heroku.com:ddauth.git
+
+
+config/database.yml
+remove the lines from production section:
+username: ...
+database_name: ...
+password: ...
+
+git push heroku master
+
+http://stackoverflow.com/questions/5450930/heroku-postgres-error-pgerror-error-relation-organizations-does-not-exist
+
+    heroku pg:reset DATABASE
+    heroku rake db:migrate ('heroku run rake db:migrate' if you're on cedar)
+   ^--- if doesn't work, look through your migrations, remove offending lines.
+   Last time, one of my migrations attempted to remove an index that did not exist. That was because it did use to exist, but I manually removed it. Don't manually remove stuff from db/schema.rb in the future. Let the migrations take care of it. And try not to delete migration files as well.
+

@@ -1,0 +1,42 @@
+#situation: in movie's show page, want to spit out the genres it belongs to in the form of links to the genre's show page
+
+#here is one way to do it:
+
+#in app/views/movies/show.html.erb
+ <%= link_to g do %>
+          <div id="genre_pic">
+          </div>
+  <% end %>
+
+
+<div class="genres_show">
+  <% @genre_last = @movie.genres.last %>
+  <% @movie.genres.each do |m_genres| %>
+      <li class="genres_list"><%= link_to m_genres.name, controller: "genres", action: 'show', id: m_genres %>
+        <% if m_genres != @genre_last %>
+        ,
+        <% end %>
+    </li>
+  <% end %>
+</div>
+
+       <%= link_to 'Edit', edit_movie_path(m) %>
+        <%= link_to 'Destroy', m, method: :delete, data: { confirm: 'Are you sure?' } %>
+
+
+#in depth
+<%= link_to "lINK NAME", controller: "some_controller_plural", action: "one_of_its_methods", id: the_object  %>
+
+seriously, id: the_object <--- literally. it will ... pull its id out? I guess yes.
+
+<%= link_to m_genres.name, controller: "genres", action: 'show', id: m_genres %>
+
+  <div class="actions">
+    <%= f.submit "Submit", :onclick =>   "return confirm('Are you sure? Please double check. Your material is about to live.')" %>
+  </div>
+
+<%= link_to "delete", rating, method: :delete, data: { confirm: "Are you sure?"} %>
+
+#How to create links given a string that corresp. to table name, and an id
+  @context = "MyModel".camelize.constantize.find(id)
+

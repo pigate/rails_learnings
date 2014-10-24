@@ -1,0 +1,18 @@
+<%= link_to "delete", rating, method: :delete, data: { confirm: "Are you sure?"} %>
+
+#src: http://stackoverflow.com/questions/2797339/rails-dependent-destroy-vs-dependent-delete-all
+
+On a Rails' model association you can specify the :dependent option, which can take one of the following three forms:
+
+[1]    :destroy/:destroy_all The associated objects are destroyed alongside this object by calling their destroy method
+[2]    :delete/:delete_all All associated objects are destroyed immediately without calling their :destroy method
+[3]    :nullify All associated objects' foreign keys are set to NULL without calling their save callbacks
+
+
+
+class User < ActiveRecord::Base
+  has_many :microposts, dependent: :destroy #<---when destroy User, destroys their posts too
+  .
+  .
+  .
+end

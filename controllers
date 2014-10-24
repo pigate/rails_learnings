@@ -1,0 +1,16 @@
+#add more views/actions to existing controller
+#in app/controllers/my_controller.rb
+  class Mycontroller < ...
+    def index
+ 	@my_items = Item.all
+    end
+    def myNewActionOrView
+        @put logic here
+    end
+  end
+
+#Create a new vew, - app/views/my_controller/my_new_action_or_view.htmkl.erb
+<p>Yup</p>
+
+#ADd it to routes, - config/routes.rb
+get "/my_controllers/delete"

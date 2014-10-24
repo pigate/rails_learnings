@@ -1,0 +1,16 @@
+src: 
+
+<%= form_tag language_path, :method => :post do %>
+  <%= label_tag :language_english, 'English' %>
+  <%= radio_button_tag :language, 'english' %>
+  <%= label_tag :language_french, 'French' %>
+  <%= radio_button_tag :language, 'french' %>
+  <%= submit_tag %>
+<% end %>
+
+Where language_path is the path defined in your routes.rb, such as
+
+match "/home/language" => "home#language", :as => 'language'
+
+	
+form_for does not take a path as an argument, but a record. I guess you meant form_tag?

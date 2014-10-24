@@ -1,0 +1,4 @@
+<%= f.submit "Submit", :onclick =>   "return confirm('Are you sure? Please double check. Your material is about to live.')" %>
+
+#you need to have the word stuck onto it.
+"Submit"

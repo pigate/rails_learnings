@@ -1,0 +1,58 @@
+#src: http://stackoverflow.com/questions/9552413/how-do-i-pass-in-a-parameter-to-a-hidden-field-tag-in-my-form-in-rails-3
+
+In my /users/show.html.erb I have:
+
+<%= link_to 'Send a message', new_message_path %>
+
+And in my /messages/new.html.erb:
+
+<%= simple_form_for @message, :url => messages_path, :method => :post do |f| %>
+   <%= hidden_field_tag :user_id %> 
+   <%= f.input :body %>
+   <%= f.submit %>
+ <% end %>
+
+And my messages controller:
+
+def new
+  @message = ActsAsMessageAble::Message.new
+ end
+
+ def create
+   @to = User.find(params[:user_id])
+   current_user.send_message(@to, params[:body])
+ end
+
+figure out how to pass the param into that hidden_field_tag in the form
+
+problem was that :user_id in <%= hidden_tag_field :user_id %> wasn't being set
+
+
+Some of the solutions we tried were to include the params in the link_to but that didn't sit well with the form which saw the object as nil.
+
+What I ended up doing was creating a nested resource like so:
+
+resources :users do
+   resources :messages do
+   end
+ end
+
+this ultimately gave me the url: users/:id/messages/new (new_user_message_path)
+
+My controller ended up looking like this:
+
+def new
+   @message = ActsAsMessageable::Message.new
+   @user = params[:user_id]
+ end
+
+ def create
+   @to = User.find params[:id]
+   if current_user.send_message(@to, params[:acts_as_messageable_message][:body]
+     flash[:notice] = "Success"
+   else 
+     flash[:error] = "Fail"
+   end
+ end
+
+In the form I was able to leave <%= hidden_tag_field :user_id %> 

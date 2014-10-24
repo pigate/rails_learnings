@@ -1,0 +1,29 @@
+#in gemfile include line
+gem 'best_in_place'
+$ bundle install
+
+#in app/assets/javascript/application.js, under the //=require jquery_ujs  , include lines
+//= require jquery
+//= require jquery_ujs
+//= require best_in_place
+//= require best_in_place.jquery-ui
+//= require jquery.purr
+//= require best_in_place.purr
+//= require turbolinks
+//= require_tree .
+
+#added this to bottom of view.html.erb that I wanted
+
+$(document).ready(function() {
+  /* Activating Best In Place */
+  jQuery(".best_in_place").best_in_place();
+});
+
+#what that does is replace anything with that identifier with the function
+
+#in app/views/your_view.html.erb
+<%= best_in_place @task, :description, :type => :input %>
+ <%= best_in_place @task, :time %>
+
+at this point must reload page to see changes bc uses JSON. triggers update action, but we need it to 
+

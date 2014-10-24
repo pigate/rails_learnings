@@ -1,0 +1,121 @@
+Partials and rendering collections
+#src = http://guides.rubyonrails.org/action_view_overview.html#partials
+#User partials to simplify views
+
+#Rendering Collections
+#partial is: _product
+
+<%= render "shared/ad_banner" %>
+<% @products.each do |product| %>
+  <%= render partial: "product", locals: { product: product} %>
+<% end %>
+
+
+
+#or can do this:
+<%= render partial: "product", collection: @products %>
+
+#src= http://robots.thoughtbot.com/rendering-collections-in-rails
+#Eg)
+<% @user.comments.each do |comment| %>
+  <%= render partial: 'comments/comment', locals: { comment: comment } %>
+<% end %>
+
+render @user.comments
+
+How does this magic work? Under the hood, render calls to_partial_path on each of our objects to determine which partial to render. Models that inherit from ActiveRecord::Base will return a partial name based on the model’s name by default. For example:
+
+User.new.to_partial_path
+# => 'users/user'
+
+
+You can override this:
+
+class User < ActiveRecord::Base
+  def to_partial_path
+    'users/profile'
+  end
+end
+
+
+++++++++++++++++++++
+
+
+++++++++++++++++++++++++++
+
+
+Can render partial for one of your models
+
+<%= render current_user.voted_movies %>
+<%= render @movies %>
+
+#automatically uses app/views/movies/_movie.html.erb to render
+#auto assigns the instance name, 'movie' to your object. 
+
+#app/views/movies/_movie.html.erb
+<li>
+ <%= movie.name %>
+ <%= movie.years %>
+</li>
+
+++++++++++++++++++++++++++++
+
++++++++++++++++++++++++++++++
+<%= render @movies %>
+#app/views/movies/_movie.html.erb #implicitly used to render
+<%= movie.name %>
+
+<%= render partial: "movies/ratings_build", movie: @movie %>
+#app/views/movies/_rating_build.html.erb
+<%= movie.name %>
+<%= form_for(movie.ratings.build, remote: true) do |f| %>
+  <%= f.hidden_field :movie_id, :value => movie.id %>
+  <%= f.hidden_field :user_id, :value => current_user.id %>
+  <%= f.label "Review" %> 
+  <%= f.text_area :review %>
+  <% i = 0 %>
+  <% while(i < 10) %>
+    <a class="star_<%i%>"><img src="assets/greystar.png"/></a>
+    <% i += 1 %>
+  <% end %>
+<% end %>
+
+#src: http://stackoverflow.com/questions/6636875/rails-hidden-field-undefined-method-merge-error
+
+
+If using hidden_field, must set it in the controller, or explicitly set value hash to value.
+
+
+
+If get undefined method 'merge' error...
+
+u are using a hidden_field instead of a hidden_field_tag. Because you are using the non-_tag version, it is assumed that your controller has already set the value for that attribute on the object that backs the form. For example:
+
+controller:
+
+    def new
+      ...
+      @order.service = "test"
+      ...
+    end
+
+view:
+
+    <%= form_for @order do |f| %>
+      <%= f.hidden_field :service %>
+      <%= f.submit %>
+    <% end %>
+
+####### with ajax
+### sometimes need to pass local variables around a lot!
+#views/rating/create.js.erb
+<% @rating = Rating.where('user_id' => params[:rating][:user_id], 'movie_id' => params[:rating][:movie_id]).first %>
+
+
+$(function(){
+  var html = "<%= escape_javascript render(partial: 'ratings/create_rating', locals: {movie: @rating.movie})%>";
+  $("#your_movie_rating").html(html)
+  var your_rating = "<%= escape_javascript(render @rating) %>"
+  $("#movie_ratings").prepend(your_rating);
+});
+

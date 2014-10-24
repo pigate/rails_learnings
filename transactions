@@ -1,0 +1,13 @@
+#src: http://markdaggett.com/blog/2011/12/01/transactions-in-rails/
+
+Use transactions when
+1. updating multiple records at one time
+
+
+Common Anti-patterns To Avoid
+
+    Using a transaction when only a single record is updated
+    Needlessly nesting transactions
+    Transactions that contain code, which won’t cause a rollback
+    Use of transactions in a controller
+

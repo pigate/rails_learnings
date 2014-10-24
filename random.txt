@@ -1,0 +1,20 @@
+<%= link_to genre.name.upcase, genre, action: "show", id: genre, class: "minor-link" %>
+#minor-link
+ul#navbar-ul ul li {
+
+More than 50 years ago, Mary lived in a little house over the hill. She has since left the place, but on the eve of her 80th, she notices that some things just don't stay in the past...
+
+Mary, a 79 year old woman is resting in a rocking chair near a window showing the cloudy weather outside. Suddenly, a huge black crow slams into the window, startling her. As soon as she composes herself, she rocks slowly, knitting a red scarf, and begins to recall old memories of her teenage years... 
+
+
+Check carefully your doors for two white stripes. Beware the red. Follow the white.
+
+Check carefully your doors for two white stripes. Beware the red. Follow the white.Check carefully your doors for two white stripes. Beware the red. Follow the white. Check carefully your doors for two white stripes. Beware the red. Follow the white.Check carefully your doors for two white stripes. Beware the red. Follow the white. Check carefully your doors for two white stripes. Beware the red. Follow the white.Check carefully your doors for two white stripes. Beware the red. Follow the white.Check carefully your doors for two white stripes. Beware the red. Follow the white.Check carefully your doors for two white stripes. Beware the red. Follow the white.Check carefully your doors for two white stripes. Beware the red. Follow the white.
+
+Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!
+
+Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors! Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors! Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!Nancy O'Toole suddenly uncovers a marvelous world-- of horrors!
+
+Stars Stars Stars she sings. Nancy's life changes when she witnessing her own personal shooting star miracle.
+
+Stars Stars Stars she sings. Nancy's life changes when she witnessing her own personal shooting star miracle. Stars Stars Stars she sings. Nancy's life changes when she witnessing her own personal shooting star miracle. For decades, scientists have been trying to figure out how rocks moved across a dry lake bed and left trails behind, but now they know blown ice sheets cause it. One popular theory was that strong winter winds upward to 90 mph combined with just enough rain to make the clay slippery caused the stones to “sail.” Another is that ice sheets pick up the rocks, or ice forms around the rock enabling it to move with the wind, leaving a series of rock trails. But now, the mystery is solved.

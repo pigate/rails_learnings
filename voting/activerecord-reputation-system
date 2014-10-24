@@ -1,0 +1,114 @@
+#src: https://www.youtube.com/watch?v=LTsja1lVB2w
+gem 'activerecord-reputation-system', require: 'reputation_system'
+
+bundle install
+
+rails g reputation system
+
+rake db:migrate
+
+#app/models/haiku.rb
+class Haiku < ...
+  belongs_to :user
+  has_reputation :votes, source: :user, aggregated_by: :sum #average, product, etc. check README
+end
+
+#config/routes
+  #can make seperate haiku votes resource or
+  resources :haikus do
+    member { post :vote } #post request to 'vote' action in haiku controller
+     #now needs to create action, 'vote' in haiku controller
+  end
+
+#app/models/users
+  has_many :haikus
+  has_reputation :votes, source: { reputation: :votes, of: :haikus}, aggregated_by: :sum
+  has_many :evaluations, class_name: "RSEvaluation", as: :source
+ 
+  def voted_for?(haiku) #some more efficient ways to do this
+    evaluations.where(target_type: haiku.class, target_id: haiku.id).present?
+  end
+
+#app/controllers/haikus_controller.rb
+  def index
+						v---scope
+    @haikus = Haiku.find_with_reputation(:votes, :all, order: "votes desc")
+  end
+  def vote
+    value = params[:type] == "up" ? 1 : -1 #I would change -1 to 0
+    @haiku = Haiku.find(params[:id])
+    #method 1
+    #@haiku.add_evalution(:votes, value, current_user) #provided by gem
+	#will raise error if user votes duplicate
+    #method 2
+    @haiku.add_or_update_evaluation(:votes, value, current_user)
+      #user's existing vote will be changed
+    redirect_to :back, notice: "Thank you for voting"
+ end
+
+#app/views/haikus/_haiku.html.erb
+<%= simple_format haiku.content %>
+<%= pluralize haiku.reputation_value_for(:votes).to_i, "vote" %> #number of votes
+<% if current_user && !current_user.voted_for?(haiku) %>
+<%= link_to "up", vote_haiku_path(haiku, type: "up"), method: "post" %>
+<%= link_to "down", vote_haiku_path(haiku, type: "down"), method: "post" %>
+<% end %>
+
+
+
+
+
+
+
+
+
+
+#app/views/users/show.html.erb
+<%= current_user.reputation_value_for(:votes).to_i %>
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+class HaikuVote < ...
+  attr_accessible :value, :haiku, :haiku_id
+
+  belongs_to :haiku
+  belongs_to :user
+
+  validates_uniqueness_of :haiku_id, scope: :user_id
+  validates_inclusion_of :value, in: [1, 0] #or [1, -1]
+  validate :ensure_not_author
+
+  def ensure_not_author
+    errors.add :user_id, "is the author of the haiku" if haiku.user_id == user.id
+  end
+end
+
+class Haiku <...
+  attr_accessible :content
+  belongs_to :user
+  has_many :haiku_votes
+
+  def self.by_votes
+    select('haikus.*, coalesce(value, 0) as votes').
+    joins('left join haiku_votes on haiku_id=haikus.id').
+    order('votes desc')
+  end
+
+  def votes
+    read_attribute(:votes) || haiku_votes.sum(:value)
+  end 
+end
+
+class User < ...
+  has_many :haikus
+  has_many :haiku_votes
+
+  def total_votes
+    HaikuVote.joins(:haiku).where(haikus: {user_id: self.id}).sum('value')
+  end
+
+  def can_vote_for?(haiku)
+    haiku_votes.build(value: 1, haiku: haiku).valid?
+  end
+end

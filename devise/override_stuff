@@ -1,0 +1,15 @@
+#eg. redirect path
+#src: https://github.com/plataformatec/devise/wiki/How-To:-Redirect-to-a-specific-page-on-successful-sign-up-%28registration%29
+
+class RegistrationsController < Devise::RegistrationsController
+  protected
+  def after_sign_up_path_for(resource)
+   static_pages_welcome_path
+  end
+  def after_inactive_sign_up_path_for(resource)
+    static_pages_about_path
+  end
+end
+
+#config/routes.rb
+devise_for :user, :controllers { "registrations" => "registrations" }

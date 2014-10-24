@@ -1,0 +1,20 @@
+Current Capabilities:
+1.svg src: external file
+2.open link in new window
+
+
+For your rails app:
+
+1. embedding svg from app/assets/images/garden3.svg
+
+<embed src="/assets/garden3.svg" type="image/svgi+xml"/>
+
+
+
+2. to link some part of it, use xlink:href. opens in new page: use target="_blank"
+
+<a xlink:href="http://www.google.com" target="_blank">
+<path .../>
+</a>
+
+

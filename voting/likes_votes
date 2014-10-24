@@ -1,0 +1,75 @@
+#Premise:
+# User can vote for a movie only once
+#    Need movie_id for that
+# Movie keeps track of who likes it, and how many. 
+#   Only need user_id for that
+
+#[1] Generate
+#rails g scaffold movie
+#rails g scaffold user
+#rails g model Vote movie_id:integer, user_id:integer
+
+#[1.5] Add index to movie_id, user_id, and unique pair [:movie_id, :user_id] to migration for votes table
+#in db/migrate/[ts]_create_votes.rb
+class CreateVotes < ActiveRecord::Migration
+  def change
+    create_table :votes do |t|
+      t.integer :voter_id #user_id
+      t.integer :voted_movie_id #movie_id
+
+      t.timestamps
+    end
+    add_index :votes, :voted_movie_id #movie_id
+    add_index :votes, :voter_id #user_id
+    add_index :votes, [:voted_movie_id, :voter_id], unique: true#[:movie_id, :user_id], unique: true
+  end
+end
+
+#[2] Assign associations
+#in app/models/user.rb
+class User < ActiveRecord::Base
+  has_many :votes, foreign_key: "voter_id", dependent: :destroy
+  has_many :voted_movies, :through => :votes, :source => :voted_movie
+  ...
+end
+
+#in app/models/movie.rb
+class Movie < ActiveRecord::Base
+  has_many :votes, foreign_key: "voted_movie_id", dependent: :destroy
+  has_many :voters, :through => :votes, :source => :voter
+  ...
+end
+~   
+#in app/models/votes.rb
+class Votes < ActiveRecord::Base
+  belongs_to :voted_movie, class_name: "Movie"
+  belongs_to :voter, class_name: "User"
+  validates :voted_movie_id, presence: true
+  validates :voter_id, presence: true
+end
+
+Vote.all            
+m = Movie.first
+m.voters
+u = User.first
+u.voted_movies
+#[3]
+#implement methods to vote
+#app/models/movies.rb
+
+class Movie < ...
+  def voted?(user)
+    @movie = Movie.find(params[:id]) 
+    @movie.voters.include?(user)
+  end
+
+  def vote!(user)
+    Vote.create!('voter_id' => user[:id], 'voted_movie_id' => @movie[:id])
+  end
+
+  def unvote!(user)
+    Vote.where('voter_id' => user[:id], 'voted_movie_id' => @movie[:id]).destroy
+  end 
+end
+
+#for displaying how many votes, etc., check out #voting_ajax

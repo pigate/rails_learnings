@@ -1,0 +1,73 @@
+#ttp://rdoc.info/github/plataformatec/devise #for rewriting routes, and other basic configuations
+
+my routes:
+
+Rails.application.routes.draw do
+  #devise_for :users, :path_names => { :sign_up => "register" } #localhost:3000/users/register
+  #http://rdoc.info/github/plataformatec/devise
+  devise_for :user
+  devise_scope :user do
+    get "register", to: "devise/registrations#new"
+  end
+  get 'home/index'
+  root 'home#index'
+end
+
+gem 'devise'
+
+rails g devise:install
+rails g devise user
+rails g devise:views #copy over the views so you can edit them too.
+
+rake routes
+
+#users/signin
+
+#users/signup
+Email
+PW
+Password Confirmation
+
+rails g controller home
+
+rails g controller dashboard
+
+
+#REMEMBER to add each controller into the config/routes.rb
+#controllers/home_controller.rb
+  before_filter :authenticate_user!, :only => :secret_page
+  def index
+
+  end
+
+  def secret_page
+    #only logged in people can access
+  end
+
+#app/views/home/secret_page.html.erb
+SECRET
+
+
+#app/views/dashboard/index.html.erb
+
+#app/views/layouts/application.html.erb
+<% if user_signed_in? %>
+  Signed in as <%= current_user.email %>, Not you?
+  <%= link_to "Sign out", destroy_user_session_path, :method => dete %>
+<% else %>
+  <%= link_to "Sign up", new_user_registration_path %> or
+  <%= link_to "singn in", new_user_session_path %>
+<% end %>
+
+<% flash.each do |name, msg| %>
+<%= content_tag :div, msg, :id => "flash_#{name}" %>
+<% end %>
+
+<%= yield %>
+
+#config/routes
+  devise_for :users 
+  resources :dashboard
+  root to: "home#index"
+  
+

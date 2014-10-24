@@ -1,0 +1,298 @@
+#src: http://git-scm.com/book/en/Git-Branching-Basic-Branching-and-Merging
+#src: https://help.github.com/articles/adding-a-remote
+#for workflow, check below at #Workflow workflow
+
+git remote add origin git@github:pigate/myrepot.git
+#set a new remote
+
+$git remote -v
+#verify remote
+
+git remote add origin https://github.com/octocat/Spoon-Knife
+# fatal: remote origin already exists.
+
+
+    Use a different name for the new remote
+    Rename the existing remote
+    Delete the existing remote
+
+
+git remote -v
+# View current remotes
+# origin  https://github.com/OWNER/REPOSITORY.git (fetch)
+# origin  https://github.com/OWNER/REPOSITORY.git (push)
+# destination  https://github.com/FORKER/REPOSITORY.git (fetch)
+# destination  https://github.com/FORKER/REPOSITORY.git (push)
+
+
+git remote rm destination
+# Remove remote
+git remote -v
+# Verify it's gone
+# origin  https://github.com/OWNER/REPOSITORY.git (fetch)
+# origin  https://github.com/OWNER/REPOSITORY.git (push)
+
+
+#get it up there
+git push
+
+
+
+#src: http://git-scm.com/book/en/Git-Branching-Basic-Branching-and-Merging
+#Workflow workflow
+git init
+git remote add origin asfdjlasjflaksjflaksjflksajdf
+
+
+[0] Do work on web site
+................
+[2] Create branch for new story you're working on
+[3] Do some work in that branch
+[5] merge the new branch, push to production
+         Master
+           |
+           v
+           C2 --> C1 --> C0
+
+Can abruptly leave branch, work on a new one, merge and finish that one, then come back to your branch
+
+To create a branch and switch to it at the same time, you can run the git checkout command with the -b switch:
+
+$git checkout -b issue53 #create and switch to new branch
+Switched to a new branch 'issue53'
+
+Same as
+
+$git branch issue53
+$git checkout issue53
+
+
+         Master
+           |
+           v
+           C2 --> C1 --> C0
+           ^
+           |
+        Issue53
+
+You commit.
+$vim index.html
+$git commit -a -m 'add a new footer [issue 53]'
+
+         Master
+           |
+           v
+    C3 --> C2 --> C1 --> C0
+    ^
+    |
+ Issue53
+
+But, if another issue pops up at this point, and need to fix, you don't have to deploy your fix along with issue53 changes.
+
+Just switch back to the master branch. NOTE:
+NOTE: before switching to master, note if working dir or staging area has 
+uncommited changes that conflict with branch you will be checking out.
+Git will not let you switch branches unless you have clean working state.
+
+$git checkout master
+Switched to branch 'master'
+
+$git checkout -b hotfix
+Switched to new branch 'hotfix' #won't see the changes you made with issue53
+$vim index.html
+$git commit -a -m 'fix broken email address'
+
+ hotfix  Master
+    |      |
+    V      v
+    C4 --> C2 --> C1 --> C0
+           ^  
+     +-----|
+    C3
+    ^
+    |
+ Issue53
+
+
+So you finish hotfix. You merge it back into master branch to deploy to production
+$git checkout master
+$git merge hotfix
+
+
+ Master
+    |
+ hotfix  
+    |      
+    V      
+    C4 --> C2 --> C1 --> C0
+           ^
+     +-----|
+    C3
+    ^
+    |
+ Issue53
+
+
+Now can delete the hotfix branch. Don't need it anymore.
+Master branch will point there.
+
+$git branch -d hotfix
+Deleted branch hotfix (Was 4asp81c)
+
+Switch back to your work-in-progress branch on issue53. continue
+$git checkout issue53
+Switched to branch 'issue53'
+$vim index.html
+$git commit -a -m 'finish the new footer [issue53]'
+
+     Master
+        |
+     hotfix
+        |
+        V      
+        C4 --> C2 --> C1 --> C0
+               ^
+         +-----|
+ C5---> C3
+  ^
+  |
+ Issue53
+
+#Note, your issue53 branch does not contain the hotfix changes. 
+To pull it in, merge your master branch into issue53 by running
+   'git merge master'
+or can wait to integrate those changes until you decide to pull the issue53 branch back into master later
+
+
+==
+
+Basic merging:
+
+So, you finished with issue53. 
+Need to merge it into your master branch.
+Will be similar to how you merged hotfix before.
+
+Check out branch you wish to merge into.
+Then run 'git merge'
+
+$git checkout master
+$git merge issue53
+
+Git will do some auto work. Will use snapshots pointed by branch tips, and common ancestor of the two
+                   Snapshot to Merge Into
+                           |
+               Common      |
+               Ancestor  Master 
+                  |        ||
+                  V        VV      
+C0 <---- C1 <---- C2 <---- C4
+                  ^
+                  |----C3 <---- C5
+                                ^^
+                                ||
+                             issue53
+                                 |
+                           Snapshot to Merge In
+
+From those 3 snapshots, it creates a new commit. Yay!
+If no conflicts (the same file not altered 2x)... All is well!
+                                    Master
+                                      |
+                                      V
+C0 <---- C1 <---- C2 <---- C4<-------C6
+                  ^                  /
+                  |----C3 <---- C5<-+
+                                ^
+                                |
+                              Issue53
+
+$git branch -d issue53
+
+
+
+
+
+
+xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+If Basic Merge Conflict... :( You must have changed the same part of the same file differently in the two branches you're merging together.
+Git won't be able to merge them cleanly.
+
+$git merge issue53
+Auto-merging index.html
+CONFLICT (content): Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+
+so... git has paused the process and is waiting for YOU to reserve the conflict.
+To see which files are unmerged, run 'git status'
+
+$git status
+On branch master
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+
+        both modified:      index.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+#Anything that has merge conflicts and hasn't been resolved is listed as unmerged.
+
+When you open your file, it will contain section like this:
+<<<<<<< HEAD
+<div id="footer">contact : email.support@github.com</div>
+=======
+<div id="footer">
+  please contact us at support@github.com
+</div>
+>>>>>>> iss53
+
+That means the version in HEAD (master branch)
+might resolve this conflict by replacing the entire block with this:
+
+Must either choose one side or the other,
+or merge the contents yourself. 
+
+a)
+Method 1: 
+
+might resolve this conflict by replacing the entire block with this:
+
+<div id="footer">
+please contact us at email.support@github.com
+</div>
+
+#fully removed the <<<<<<<, =======, and >>>>>>> lines. 
+
+
+#to check everything again...
+$ git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   index.html
+
+IF all ok...
+
+$  git commit
+$ git push origin master #updates online version
+
+#if seriously screw up...
+git fetch --all
+git reset --hard origin/master
+
+#puts you back to nearest committed version. Rewrites your local repo/dir
+#NOTE: make sure you test everything thoroughly before uploading!
+
+#to pull changes from remote repo back down to local repo
+git pull origin branch_name
+git pull origin master
+
+=====
+#to rename a branch in your local repo
+git branch -m old_name new_name #renames old to new
+git branch -m new_name #renames current branch

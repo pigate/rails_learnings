@@ -1,0 +1,10 @@
+#app/views/movies/index.html.erb
+
+#trying to delete a link 
+
+#Problem: undefined method `model_name' for MovieVote::ActiveRecord_AssociationRelation:Class
+
+
+<% @movies.each do |m| %>
+  <%= link_to 'UnVote', m.movie_votes.where('voter_id' => 4),  action: "destroy", data: {confirm: 'Are you sure?'} %>
+<% end %>

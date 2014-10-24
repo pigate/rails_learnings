@@ -1,0 +1,36 @@
+#src = https://www.youtube.com/watch?v=v1KI571TdUQ
+
+
+
+#matches your gmail account
+#initializers/setup_mail.rb
+ActionMailer::Base.smtp_settings = {
+  :address		=> "smtp.gmail.com",
+  :port			=> 587,
+  :domain		=> "railscasts.com",
+  :user_name		=> "railscasts",
+  :password		=> "secret"
+  :authentication	=> "plain",
+  :enable_starttls_auto => true
+}
+
+rails g mailer user_mailer
+
+#in user_mailer.rb
+class UserMailer < ActionMailer::Base
+  def registration_confirmation(user)
+    mail(:to => user.email, :subject => "Registered", :from => "ryan@railscasts.com")
+  end
+end
+
+#or provide some default args
+class UserMailer < ActionMailer::Base
+  default :from => "ryan@railscasts.com"
+  def registration_confirmation(user)
+    mail(:to => user.email, :subject => "Registered", :from => "ryan@railscasts.com")
+  end
+end
+
+
+#views/user_mailer/registration_confirmation.text.erb
+Thank you for registering!

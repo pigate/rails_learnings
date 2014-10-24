@@ -1,0 +1,50 @@
+
+to remove:
+apt-get --purge remove postgresql\*
+
+setting up local postgres db
+youtube had a really good vid: rails, 
+https://www.youtube.com/watch?v=Rea2AjMgZXA
+
+download:
+9:44 min
+sudo apt-get install postgresql postgresql-contrib
+sudo -u postgres psql
+#  create user your-name with password '12345'
+# ;
+CREATE ROLE
+#  alter user your-name with superuser;
+ALTER ROLE
+ # \q
+
+For use with heroku, and to make it work locally, edit config/database.yml
+
+#config/database.yml
+
+production:
+  <<: *default
+  #delete the stuff after
+
+$rake db:create
+
+
+
+
+http://stackoverflow.com/questions/18370875/fatal-password-authentication-failed-for-user
+
+ALTER USER user_name WITH SUPERUSER;
+set method from md5 in trust
+TYPE DATABASE USER ADDRESS METHOD
+
+IPv4 local connections: host all all 127.0.0.1/32 trust
+
+IPv6 local connections: host all all ::1/128 trust
+
+rake db:create
+
+http://stackoverflow.com/questions/17443379/psql-fatal-peer-authentication-failed-for-user-dev
+
+in config/database.yml
+under development:
+username: 'bimbim'
+password: 'pp'

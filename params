@@ -1,0 +1,103 @@
+class MovieVotesController <...
+  def create
+    @movie_vote_to_make = MovieVote.new(movie_vote_params).save
+	#only works if have private movie_vote_params
+
+  end
+  private
+    # Never trust parameters from the scary internet, only allow the white list through.
+    def movie_vote_params
+      params.require(:movie_vote).permit(:voter_id, :voted_movie_id)
+    end
+
+end
+
+#
+#
+#
+
+#and you must have the following form forms:
+
+#from MoviesController    @movie_vote_to_make = MovieVote.new
+
+     <%= form_for @movie_vote_to_make  do |f| %>
+        <%= f.hidden_field :voter_id, :value => 4 %>
+        <%= f.hidden_field :voted_movie_id, :value => m.id %> 
+        <%= f.submit %>
+     <% end %>
+
+#Movie, MovieVote
+#can't use MovieVote.build
+# and must always feed in :voted_movie_id even though this is supposed to belong to the movie already
+
+                  V-- or must use this form too:  
+     <%= form_for(m.movie_votes.build(voter_id: 4)) do |f| %>
+       <%= f.hidden_field :voter_id %> 
+       <%= f.hidden_field :voted_movie_id, :value => m.id %>
+       <%= f.submit "Vote today!" %>
+     <% end %>
+
+###############
+
+###############
+
+################
+
+################
+
+################
+
+###############
+
+#Alternative Method:
+#method 2
+
+
+class MovieVotesController < ApplicationController
+  before_action :signed_in_user
+
+  def create
+    new_vote = MovieVote.new('voter_id' =>params[:movie_vote][:voter_id], 'voted_movie_id' => params[:movie_vote][:voted_movie_id])
+#    @movie_vote_to_make = MovieVote.new(movie_vote_params)
+    respond_to do |format|
+        if new_vote.save
+#      if @movie_vote_to_make.save
+          format.html { redirect_to movies_path, notice: 'Vote was created' }
+          format.js #when use ajax, calls on this
+      else
+          format.html { redirect_to movies_path, notice: 'Vote not correctly saved' }
+          format.json { render json: @movie_vote_to_make.errors, status: :unprocessable_entity }
+      end 
+    end
+  end
+
+  #no movie_vote_params
+end
+
+
+
+
+
+
+
+
+	#method 2 (cont)
+	#app/views/movies/index.html.erb
+
+<% @movies.each do |m| %>
+	<!-- uses MoviesController#index already created @movie_vote_to_make = MovieVote.new -->
+
+
+     <%= form_for @movie_vote_to_make  do |f| %>
+        <%= f.hidden_field :voter_id, :value => 4 %>
+        <%= f.hidden_field :voted_movie_id, :value => m.id %> 
+        <%= f.submit %>
+     <% end %>
+    <!-- method 2 -->
+     <%= form_for(m.movie_votes.build(voter_id: 4)) do |f| %>
+       <%= f.hidden_field :voter_id %> 
+       <%= f.hidden_field :voted_movie_id, :value => m.id %>
+       <%= f.submit "Vote today!" %>
+     <% end %>
+<% end %>
+

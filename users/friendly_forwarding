@@ -1,0 +1,61 @@
+#assuming have sessions_helper.rb
+#login -> then can create session
+
+#must login before can view/access some methods/pages
+#then must be correct user to have access to some logic/resources
+
+#'store_location' called when about to attempt to login
+#'redirect_back_or' called when 
+  #	attempting to create session. after user logs in, can go back to what they needed to do.
+  
+module SessionsHelper
+  def current_user?(user)
+    current_user == user
+  end
+
+  def redirect_back_or(default)
+    redirect_to(session[:return_to] || default)
+    session.delete(:return_to)
+  end
+ 
+  def store_location
+    session[:return_to] = request.url if request.get?
+  end
+end
+
+#calls 'store_location' call to app/controllers/users_controller.rb
+#in app/controllers/users_controller.rb
+class UsersController < ...
+  before_action :signed_in_user, only: [:index, :edit, :update] #what about destroy?
+  before_action :correct_user,   only: [:edit, :update] #what about destroy?
+
+  def show
+    @user = User.find(params[:id])
+  end
+
+  private
+   ...
+  def signed_in_user #<--- maybe move it to sessions_helper.rb
+   unless signed_in?
+     store_location
+     redirect_to signin_url, notice: "Please sign in"
+   end
+  end
+
+  def correct_user
+    @user = User.find_by(:id => params[:id])
+    current_user?(@user)
+  end
+end
+
+#sessions_controller.rb calls 'redirect_back_or' after attempt to login
+def create
+  user = User.find_by(email: params[:session][:email].downcase)
+  if (user && user.authenticate(params[:session][:password])
+    sign_in user
+    redirect_back_or user
+  else
+    flash.now[:error] = 'Invalid email/password combination'
+    render 'new'
+  end
+end

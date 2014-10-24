@@ -1,0 +1,15 @@
+#assumes you have a users_controller
+To create other users, just enable the users#destroy
+I chose to only allow delete for other users on the users#show page.
+
+#app/views/users/show.html.erb
+<% if (current_user.try(:admin?) && current_user != @user)  || current_user == @user%>
+  <%= link_to "delete", @user, :action => :destroy, :method => :delete, :confirm => "You sure?" %>
+<% end %>
+
+
+vs. 
+
+#app/views/users/index.html.erb
+<%= link_to 'Destroy Yourself', user_registration_path, :method => :delete, data: { confirm: 'Are you sure?' } %>
+

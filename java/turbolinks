@@ -1,0 +1,5 @@
+see 'javas' for how to remove turbolinks. If need to add back in, undo those steps, and $bundle install. restart your server as well.
+
+Turbolinks has slightly different relative file paths.
+Don't use path, 'assets/my_picture.png'
+Just use 'my_picture.png'

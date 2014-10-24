@@ -1,0 +1,15 @@
+m = Movies.first
+m.genres << Genre.first
+
+#<Activeecord::Associations::CollectionProxy [#<Genre id: 17, name: "horror", created_at: "2014-08-18 02:43:13", updated_at: "2014-08-18 02:43:13">]> 
+2.1.2 :005 
+
+> m.genres.first[:name]
+ => "horror" 
+
+m_g = m.genres
+m_g #array of hash
+m_g[0][:name] #'horror'
+
+
+

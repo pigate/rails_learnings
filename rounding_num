@@ -1,0 +1,8 @@
+in the migration, before you bundle migrate, ...
+
+class CreateProducts < ...
+  def change
+     create_table :products do |t|
+	t.decimal :price, :precision => 8, :scale => 2 #8 sig figs at most, 2 are decimal places
+    	..
+end

@@ -1,0 +1,11 @@
+To get part of a hash, can slice in rails, or delete in ruby
+#in rails
+> first = {:a => 1, :c => 2, :e => 3, :d => 4}
+> second = first.slice(:a, :c, :e)
+    second = {:a => 1, :c => 2, :e => 3}
+#in ruby
+> second = first.delete_if { |k, v| ![:a, :c, :e].include?(k) }
+> second = first.delete_if { |k| ![:a, :c, :e].include?(k) }
+
+> second = first.delete_if { |key, value| key == :e || key == :d }
+

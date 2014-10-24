@@ -1,0 +1,21 @@
+class Foo
+  def bar
+  end
+end
+
+Foo.new.bar <-- operates on instance
+
+class Foo
+  def self.bar
+  end
+end
+
+Foo.bar <--operates on class
+
+To have method accessible from view,
+1) put in model
+2) put in helper
+3) put in controller, but add a line: "helper_method :my_method"
+
+To have method accessible in all controllers
+1) put in ApplicationsController. call by method

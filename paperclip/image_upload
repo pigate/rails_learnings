@@ -1,0 +1,128 @@
+#src: http://thewebfellas.com/blog/2009/8/29/protecting-your-paperclip-downloads
+
+#old instructions for imagemagick, outdated version of paperclip, but the rest of paperclip part still works: src= http://robmclarty.com/blog/how-to-install-image-magick-and-setup-paperclip
+
+#official site for imagemagic: http://www.imagemagick.org/script/install-source.php
+
+#using gem paperclip
+#to use image styling, need to also include gem image-magick
+# nice JS libraries out there for making a more pleasant user experience (e.g., progress bars, previews, cropping adjustments) like jquery.fileupload and dropzone.js. 
+
+#optional if want use image styling
+#Install ImageMagick
+
+#first check if already have
+$ identify -version
+  #if it identifies itself as imagemagick, a-ok! else, do the following:
+
+#old instructions
+> sudo apt-get install libpng12-dev libglib2.0-dev zlib1g-dev libbz2-dev libtiff4-dev libjpeg8-dev
+> cd ~/src
+> wget http://www.imagemagick.org/download/ImageMagick.tar.gz
+> tar -xzvf ImageMagick.tar.gz
+> cd ImageMagick
+> ./configure
+> make
+> sudo make install
+> sudo ldconfig /usr/local/lib
+
+#src: possibly updated instructions:
+# http://www.imagemagick.org/script/install-source.php
+
+#in Gemfile
+gem 'paperclip', '~>4.1'
+
+> rails g paperclip user avatar
+  #adds the following to user table
+
+    avatar_file_name (string)
+    avatar_file_size (int)
+    avatar_content_type (string)
+    avatar_updated_at (datetime)
+
+> rake db:migrate
+
+
+let Rails know that your model has a Paperclip attachment by using Paperclip's built-in has_attached_file method. This allows you to specify a number of things including a custom path where the files should be saved, and in the case of images any alternate versions you want to generate (like thumbnails), as well as other command line options you want to pass. In the example app I use the following settings.
+
+#app/models/user.rb
+eg) 
+has_attached_file :avatar, 
+:path => ":rails_root/public/system/:attachment/:id/:basename_:style.:extension",
+:url => "/system/:attachment/:id/:basename_:style.:extension",
+:styles => {
+  :thumb    => ['100x100#',  :jpg, :quality => 70],
+  :preview  => ['480x480#',  :jpg, :quality => 70],
+  :large    => ['600>',      :jpg, :quality => 70],
+  :retina   => ['1200>',     :jpg, :quality => 30]
+},
+:convert_options => {
+  :thumb    => '-set colorspace sRGB -strip',
+  :preview  => '-set colorspace sRGB -strip',
+  :large    => '-set colorspace sRGB -strip',
+  :retina   => '-set colorspace sRGB -strip -sharpen 0x0.5'
+}
+
+What this is doing is storing all avatar image file attachments in: :rails_root/public/system/:class/:attachment/:id/:basename_:style.:extension
+
+#smaller eg)
+#for model that will be using
+class User < ActiveRecord::Base
+  has_attached_file :avatar, :styles => { :medium => "300x300>", :thumb => "100x100>" }, :default_url => ":style/missing.png" #auto url: assets/images/++++
+  validates_attachment_content_type :avatar, :content_type => /\Aimage\/.*\Z/
+end
+
+if you want your thumbnails to be exactly 100x100 pixels, but you don't want the image to be distorted (e.g., squished) and instead crop off any part of the image that doesn't fit proportionally, you would add the "#" symbol to the end of your size definition.
+
+#even better:
+eg) validates_attachment :avatar,
+    :presence => true,
+    :size => { :in => 0..10.megabytes },
+    :content_type => { :content_type => /^image\/(jpeg|png|gif|tiff)$/ }
+
+  #TODO go through these
+  validates_attachment_content_type :photo, :content_type => /\Aimage/
+  # Validate filename
+  validates_attachment_file_name :photo, :matches => [/png\Z/, /jpe?g\Z/, /JPE?G\Z/]
+  # Explicitly do not validate
+  do_not_validate_attachment_file_type :photo
+
+#UPDATE CONTROLLER
+#app/controllers/user_controller.rb
+def user_params
+    params.require(:user).permit(:name, :description, :avatar)
+end
+
+#UPDATE THE FORM _form.html.erb partial using something like the following:
+
+<div class="field">
+    <%= f.label :avatar %><br>
+    <%= f.file_field :avatar %>
+</div>
+
+#TO SHOW
+ you might want to show the avatar image on the User show page like this:
+
+<p>
+    <strong>Avatar:</strong>
+    <%= image_tag @user.avatar.url(:large) %>
+</p>
+
+And maybe use the thumbnail in the User index page like this:
+
+<td><%= image_tag user.avatar.url(:thumb) %></td>
+
+
+#I like to style the image in this way:
+<div class="user_photo_circle"><%= image_tag user.photo.url%></div>
+.user_photo_circle > img {
+  width: 80px;
+  height: 80px;
+  border: 2px solid white;
+  -moz-border-radius: 50px;
+  -webkit-border-radius: 50px;
+  border-radius: 75px;
+  margin-left: auto;
+  margin-right: auto;
+}
+

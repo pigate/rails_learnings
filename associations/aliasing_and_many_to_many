@@ -1,0 +1,109 @@
+#src: http://www.theodinproject.com/ruby-on-rails/active-record-associations
+#must alias some class names bc already used, or too much confusion
+
+
+#Premise: Movies and users. 
+#Prior:
+  Movies each belong to user (author). 
+  User has movies (they authored it).
+
+class Movie <...
+  belongs_to :user #user_id used
+end
+
+class User <...
+  has_many :movies #movie_id used
+end
+
+#Want to associate Users as voting for Movies. Need to use user_id and movie_id again.
+
+
+Information:
+When you create an association, Rails makes two major assumptions -- first, that the class of the model your association points to is based directly off of the name of the association, and, second, that the foreign key in any belongs_to relationship will be called yourassociationname_id. Any time you go away from these defaults, you just need to let Rails know what kind of class to look for and which foreign key to use.
+
+Simple Case:
+eG)
+    # app/models/user.rb
+    class User < ActiveRecord::Base
+      has_many :posts
+    end
+
+    # app/models/post.rb
+    class Post < ActiveRecord::Base
+      belongs_to :user
+    end
+
+User.first.posts #look for foreign_key user_id in Posts table
+Post.first.user #look through Users table for User with ID == Post.first.user_id
+
+If Post is both authored and edited by pot. diff users, 
+
+class Post < ...
+  has_many :post_authorings, :foreign_key => :authored_post_id
+  has_many :authors, :through => :post_authorings, :source => :post_author
+  #  belongs_to :author, :class_name => 'User'
+  belongs_to :editor, :class_name => 'User'
+end
+
+class User <...
+  has_many :post_authorings, :foreign_key => :post_author_id
+  has_many :authored_posts, :through => :post_authorings
+  has_many :edited_posts, :foreign_key => :editor_id, :class_name => "Post"
+  # has_many :authored_posts, :foreign_key => 'author_id', :class_name => 'Post'
+  # has_many :edited_posts, :foreign_key => 'editor_id', :class_name => 'Post'
+end
+
+class PostAuthoring < ...
+  belongs_to :post_author, :class_name => "User"
+  belongs_to :authored_post, :class_name => "Post"
+end
+
+
+Post.first.authors:
+[1] id = get Post.first id. 
+[2] record = PostAuthoring.where(authored_post_id == id)
+[3] author_id = record.post_author_id
+[4] users = User.where(id == post_author_id)
+=======
+Users who voted for movie known as movie's voters
+Movies voted for by users known as voted_movies
+
+#db/migrate/[ts]_create_movie_vote.rb
+def change
+  create table :movie_votes do |t|
+    t.integer :voter_id #alias for User.id
+    t.integer :voted_movie_id #alias for Movie.id
+    ...
+  end
+  add_index :movie_votes, :voter_id
+  add_index :movie_votes, :voted_movie_id
+  add_index :movie_votes, [:voter_id, :voted_movie_id], unique: true
+end
+
+$rails c
+m= Movie.first
+m.voters
+u = User.first
+u.voted_movies
+MovieVote.all
+MovieVote.new('voter_id' => 1, 'voted_movie_id' => 1)
+
+#app/models
+class Movie <...
+  has_many :movie_votes, :foreign_key => :voted_movie_id
+  has_many :voters, :through => :movie_votes, :source => :voter
+  belongs_to :user
+end
+
+
+class MovieVote <...
+  belongs_to :voter, :class_name => "User"
+  belongs_to :voted_movie, :class_name => "Movie"
+end
+
+class User <...
+  has_many :movie_votes, :foreign_key => :voter_id
+  has_many :voted_movies, :through => :movie_votes, :source => :voted_movie
+end
+
+

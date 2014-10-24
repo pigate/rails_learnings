@@ -1,0 +1,26 @@
+#resize image to fit width, center, then crop photo (#)
+#auto ensures original is saved as this style. Can add more style if wanted, 
+but if original is tiny, will derive off the original. may get grainier and granier
+
+
+class User < ActiveRecord::Base
+  has_attached_file :photo,
+    :styles => {
+     :original => "100x100#"
+    },
+    :convert_options => {
+      :thumb => "-quality 75 -strip" #save some room by stripping some quality
+    },
+    :default_url => "missing_persons.png" #store in app/assets/images
+
+  has_attached_file :avatar,
+    :styles => {
+      :original => "400x600^" #fill
+    },
+    :default_url => 'missing.png"
+#src: http://stackoverflow.com/questions/3219787/how-do-i-tell-paperclip-to-not-save-the-original-file
+
+I believe that you can simply define a style for :original to have paperclip replace the original with that size.
+
+:styles => { :original => '300x168>', :cropped_thumb => {:geometry => "115x70#",
+ :jcrop => true}, ...}

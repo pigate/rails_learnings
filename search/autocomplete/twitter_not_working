@@ -1,0 +1,142 @@
+$(document).ready(function() {
+var movie_engine = new Bloodhound({
+  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+  queryTokenizer: Bloodhound.tokenizers.whitespace,
+  limit: 10,
+  prefetch: {
+    // url points to a json file that contains an array of country names, see
+    // https://github.com/twitter/typeahead.js/blob/gh-pages/data/countries.json
+    url: '/static_pages/load_suggestions',
+    // the json file contains an array of strings, but the Bloodhound
+    // suggestion engine expects JavaScript objects so this converts all of
+    // those strings
+    filter: function(list) {
+    return $.map(list, function(movie) { return { name: movie.name }; });
+    }
+  }
+});
+
+  // kicks off the loading/processing of `local` and `prefetch`
+movie_engine.initialize();
+
+// passing in `null` for the `options` arguments will result in the default
+// options being used
+$('.prefetch .typeahead').typeahead(null, {
+  name: 'movie_engine',
+  displayKey: 'name',
+  // `ttAdapter` wraps the suggestion engine in an adapter that
+  // is compatible with the typeahead jQuery plugin
+  source: movie_engine.ttAdapter()
+});
+$('#scrollable-dropdown-menu .typeahead').typeahead(null, {
+  name: 'movie_engine',
+  displayKey: 'name',
+  source: movie_engine.ttAdapter(),
+});
+});
+
+/******* The following works. But if need to go fetch the data from somewhere ********************************************/
+var cars;
+$(document).ready(function(){
+  var substringMatcher = function(strs) {
+    return function findMatches(q, cb) {
+      var matches, substringRegex;
+
+      // an array that will be populated with substring matches
+      matches = [];
+
+      // regex used to determine if a string contains the substring `q`
+      substrRegex = new RegExp(q, 'i');
+
+      // iterate through the pool of strings and for any string that
+      // contains the substring `q`, add it to the `matches` array
+      $.each(strs, function(i, str) {
+        if (substrRegex.test(str)) {
+          // the typeahead jQuery plugin expects suggestions to a
+          // JavaScript object, refer to typeahead docs for more info
+          matches.push({ value: str });
+        }
+      });
+
+      cb(matches);
+    };
+  };
+  cars = ['Audi', 'BMW', 'Bugatti', 'Ferrari', 'Ford', 'Lamborghini', 'Mercedes Benz', 'Porsche', 'Rolls-Royce', 'Volkswagen', 'Apples and Oranges', 'Apples and Oranges 2']
+
+  $('.typeahead').typeahead({
+    hint: true,
+    highlight: true,
+    minLength: 1
+  },
+  {
+    name: 'states',
+    displayKey: 'value',
+    source: substringMatcher(cars)
+  });
+
+});
+
+
+/********* Sort of works. not really. bad. only shows the first 5 from my json doc. and no others. does not highlight. blehh ******//
+$(document).ready(function(){
+ /** start **/
+var countries = new Bloodhound({
+//datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+datumTokenizer: Bloodhound.tokenizers.whitespace('name'),
+
+queryTokenizer: Bloodhound.tokenizers.whitespace,
+limit: 210,
+prefetch: {
+// url points to a json file that contains an array of country names, see
+// https://github.com/twitter/typeahead.js/blob/gh-pages/data/countries.json
+url: '/static_pages/load_suggestions',
+// the json file contains an array of strings, but the Bloodhound
+// suggestion engine expects JavaScript objects so this converts all of
+// those strings
+  /*
+  filter: function(list) {
+    return $.map(list, function(country) { return { name: country }; });
+  }
+  */
+}
+
+//  remote: '/static_pages/load_suggestions' 
+});
+countries.initialize();
+$('.typeahead').typeahead(null, {
+name: 'countries',
+displayKey: 'name',
+// `ttAdapter` wraps the suggestion engine in an adapter that
+// is compatible with the typeahead jQuery plugin
+source: countries.ttAdapter()
+});
+ /** end **/
+}); 
+
+/*************** Does not work at all ****************/
+$(document).ready(function(){
+ /** start **/
+var countries = new Bloodhound({
+//datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+datumTokenizer: function (d) { return Bloodhound.tokenizers.whitespace(d.name) },
+
+queryTokenizer: Bloodhound.tokenizers.whitespace,
+remote: '/static_pages/load_suggestions'
+
+//  remote: '/static_pages/load_suggestions' 
+});
+countries.initialize();
+$('.typeahead').typeahead({
+        hint: true,
+        highlight: true,
+        minLength: 3
+        },
+    {
+        name: 'countries',
+        displayKey: 'name',
+        source: countries.ttAdapter()
+    }
+);
+ /** end **/
+});
+~    

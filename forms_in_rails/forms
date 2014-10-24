@@ -1,0 +1,50 @@
+#src: http://stackoverflow.com/questions/1349348/difference-between-form-for-form-tag
+#src: http://api.rubyonrails.org/classes/ActionView/Helpers/FormHelper.html
+
+form_tag #used for non-model purposes. Woudl use for search query
+
+form_for 
+#is used for model-forms
+#prefers an activerecord object
+#allows easy create or edit form
+
+#to use it in a "new" view, must create an empty instance in controller
+def new
+  @foo = Foonew
+end
+
+When render a partial from a different controller:
+#src: http://stackoverflow.com/questions/6189728/render-form-partial-in-a-different-controller-not-nested
+
+log_book/show.html.erb
+<b>Name:</b>
+<%= @log_book.name %>
+<%= render :partial => '/log_entries/form', :log_entry => @log_book.LogEntries.new %>
+
+log_entry/_form.html.erb (using local variable):
+<%= form_for(log_entry) do |f| %>
+  <% if log_entry.errors.any? %>
+    ...
+  <% end %>
+  <div class="field">
+    <%= f.label :Text %><br />
+    <%= f.text_field :Text %>
+  </div>
+  <div class="actions">
+     <%= f.submit %>
+  </div>
+<% end %>
+
+class LogBook < ActiveRecord::Base
+  belongs_to :User
+  has_many :LogEntries, :dependent => :destroy
+end
+
+class LogEntry < ActiveRecord::Base
+  belongs_to :LogBook, :class_name => "log_book", :foreign_key => "log_book_id"
+end
+
+
+Give path relative from the view folder
+<%= render :partial => '/log_entries/form", :log_entry => @log_book.log_entries.build %>
+<%= render :partial => '/log_entries/form', :log_entry => @log_book.LogEntries.new %>

@@ -1,0 +1,29 @@
+#src: http://itsignals.cascadia.com.au/?p=7
+#  For naming models using multiple words, camel case, capitalized first
+#  Name it PromotedEvent in the file promoted_event.rb
+#  a = PromotedEvent.new
+#scaffold
+$ rails g scaffold User name:string
+
+$ rails c
+u = User.new('name' => 'Tiff')
+u = User.first
+all_users = User.all
+
+
+#assume scaffold Movie created too
+#models 
+$ rails g model MyVote user_id:integer movie_id:integer
+
+$ rails c
+
+vote = MyVote.all
+m  = Movie.first
+m.my_votes
+m.users #user has_many :my_votes, has_many :movies, :through => :my_votes
+        #movie has_many :my_votes, has_many :users, :through => :my_votes
+
+#using rails c to show the table names
+ActiveRecord::Base.connection.tables
+
+

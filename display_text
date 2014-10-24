@@ -1,0 +1,2 @@
+<%=simple_format h @forum_post.message %>
+#will show newlines.

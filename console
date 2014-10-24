@@ -1,0 +1,11 @@
+#src: https://github.com/rails/rails/blob/master/activerecord/lib/active_record/connection_adapters/abstract/schema_statements.rb#L21
+
+$rails c #rails console
+
+#show all table names in proj's database
+
+ActiveRecord::Base.connection.tables
+
+#drop table
+
+ActiveRecord::Migration.drop_table(:users)

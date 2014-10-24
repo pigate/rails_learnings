@@ -1,0 +1,22 @@
+<% if @genres != nil %>
+ <% @genres.each do |g| %>
+   <div class="check_genre">
+     <label><%= g.name %></label><br>
+     <% if   true        %>
+       <%= check_box_tag g.name, g.name, :input_html => {:checked => g.name } %>
+     <% else %>
+       <%= check_box_tag g.name, g.name %>
+     <% end %>
+   </div>
+ <% end %>
+<% end %>
+
+
+<%= check_box_tag g.name, g.name, :input_html => {:checked => g.name } %>
+<%= check_box_tag param_name, param_value, ...options  %>
+
+
+:input_html => {:checked => value }  #if you want prechecked
+
+<%= check_box_tag g.name, g.name, :checked => true %>
+ #works too

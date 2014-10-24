@@ -1,0 +1,220 @@
+#to create and use secure passwords, must encrypt using hash!
+#sessions will handle sign in and sign out
+
+[1] every user has a password_digest:string so that password never travels raw over net. We only deal with end to end encrypted password.
+[2] encrypt all network traffic with ssl
+[3] sign in using password + username/email with remember_token/cookie. We choose email here. config routes.
+[3] Use sessions to keep track that user still here.
+[4] Create sessions helper to allow all controllers/pages access signin/signout options
+[4.5] Make sessions_helper.rb available to every controller
+[5] Create sign in form
+[6] Optional: After sign up, auto sign in
+[7] What do when signed in...
+--------
+[1] Secure password. User model should have the string columns: remember_token, password, email
+
+#src: https://rubygems.org/gems/bcrypt-ruby
+#src: https://github.com/codahale/bcrypt-ruby #usage
+#in Gemfile
+gem 'bcrypt', '~> 3.1.5'
+
+#add remember_token to users (assume already have password, email)
+#remember to 'permit' users to own a remember_token
+rails g migration add_remember_token_to_users
+#db/migrate/[ts]_add_remember_token_to_users.rb
+  def change
+    add_column :users, :remember_token, :string
+    add_index :users, :remember_token
+  end
+
+#app/models/user.rb
+class User < ActiveRecord::Base
+  ...
+  before_create :create_remember_token
+  has_secure_password #bcrypt's method :) 
+  #for more on it: src: has_secure_password
+  def User.new_remember_token
+    SecureRandom.urlsafe_base64
+  end
+
+  def User.digest(token) #use for encrypting via digest
+    Digest::SHA1.hexdigest(token.to_s)
+  end
+
+  def create_remember_token
+    self.remember_token = User.digest(User.new_remember_token)
+  end
+end
+
+
+
+now can do:
+user.password_digest <-- hashed version of password
+current_user = user.authenticate(password)
+Digest::MD5::hexdigest(email.downcase)
+user.password_digest <-- hashed version of password
+current_user = user.authenticate(password)
+Digest::MD5::hexdigest(password)
+
+[2] Force all network traffic to use SSL
+#in config/environments/production.rb
+MyApp:Application.configure do
+  config.force_ssl = true
+    #Force all access to app over SSL
+    #use Strict-TRansport security and secure cookies
+end
+
+[3] Cookie/remember_token + Sessions (sign_in, sign_out)
+rails g controller Sessions --no-test-framework 
+rails g migration AddSessionStuff
+
+#signin -> create new Session. save token in session and user
+#signout -> destroy Session. delete token. replace token in user so cannot reuse.
+#in config/routes.rb
+resources :sessions, only: [:new, :create, :destroy]
+match '/signup', to: 'users#new', via: 'get'
+match '/signin', to: 'sessions#new', via: 'get'
+match '/signout', to: 'sessions#destroy', via: 'delete'
+   #<%= link_to "Sign out", signout_path, method: "delete" %>
+
+
+#double check. rake routes.
+$rake routes
+HTTP request    URL     Named route     Action  Purpose
+GET     /signin         signin_path     new     page for a new session (signin)
+POST    /sessions       sessions_path   create  create a new session
+DELETE  /signout        signout_path    destroy         delete a session (sign out)
+
+#[3] Sessions controller. sign in/signin => session#create. sign out => session#destroy
+#in app/controllers/sessions_controller.rb
+
+##we choose to put certain functions 
+#  pertaining to sessions in app/helpers/sessions_helpers.rb
+#  bc want to access this from other views too!
+
+  def create #user signs in. @current_user will be set to user later. 
+    #NOTE: do not have @current_user as attr_accessor type.
+	#bc need @current_user to abide by session sign in. See session helper
+    user = User.find_by(email: params[:session][:email])
+    if (user && user.authenticate(params[:session][:password]))
+      sign_in user #in app/helpers/sessions_helper.rb
+      #optional. can redirect anywhere
+      redirect_to user
+    else
+      flash[:error] = 'Invalid email/pw combo'
+      render 'new'
+    end
+  end
+  
+  def destroy #user signs out
+    sign_out #in app/helpers/sessions_helper.rb
+    redirect_to root_url
+  end
+
+#[4] SessionsHelper contains hidden member, @current_user, and sign_in, sign_out
+#in app/helpers/sessions_helper.rb
+	#cookies.permanent[:remember_token] ===
+        #cookies[:remember_token] = { value: remember_token,
+	#				expires: 20.years.from_now.utc}
+module SessionsHelper
+  def sign_in(user)
+    remember_token = User.new_remember_token #[1] create new token
+    cookies.permanent[:remember_token] = remember_token #[2] place raw token into browser cookie
+    user.update_attribute(:remember_token, User.digest(remember_token))
+    self.current_user = user #set current user equal to given user
+      # transforms into      current_user=(user)
+  end
+
+  def current_user=(user)
+    @current_user = user
+  end
+
+  def current_user
+    remember_token = User.digest(cookies[:remember_token])
+    @current_user ||= User.find_by(remember_token: remember_token)
+    #@current_user is either itself
+    #@current_user is set to user still signed (by remember_token)
+  end
+
+  def current_user?(user) #for authorization purpose
+    #logged in      #another user from a controller
+    current_user == user
+  end
+
+  def signed_in?
+    !current_user.nil?
+  end
+
+  def sign_out
+    current_user.update_attributes(:remember_token => User.digest(User.new_remember_token))
+    cookies.delete(:remember_token)
+    self.current_user = nil
+  end
+end  
+
+#[4.5] Make sessions_helper global accessible
+#in app/controllers/application_controller.rb
+class ApplicationController <...
+  protect_from_forgery with: :exception
+  include SessionsHelper
+end
+
+#[5] Sign in form
+#in app/views/sessions/new.html.erb
+<% provide(:title, "Sign in") %>
+
+<div class="row">
+  <div class="span6 offset3">
+    <%= form_for(:session, url: sessions_path) do |f| %>
+         #will create a new session
+      <%= f.label :email %>
+      <%= f.text_field :email %>
+
+      <%= f.label :password %>
+      <%= f.password_field :password %>
+
+      <%= f.submit "Sign in" %>
+    <% end %>
+    <p>New user? <%= link_to "Sign up!", signup_path %></p>
+  </div>
+</div>
+
+#NOTE when use signs in, data is posted like this:
+{ session: { password: "blah", email: "blah"} }
+params[:session] <-- is a hash
+  == { password: "blah", email: "blah"}
+
+#To access,
+ params[:session][:email]
+ params[:session][:password]
+
+
+
+#[6] Sign in automatically after sign up
+#in app/controllers/users_controller.rb
+  def create
+    @user = User.new(user_params)
+    if @user.save
+      sign_in @user
+      flash[:success] = "Welcome!"
+      format.html { redirect_to @user, notice: 'User was successfully created.' }
+      format.json { render :show, status: :created, location: @user }
+
+    else
+      format.html { render :new }
+      format.json { render json: @user.errors, status: :unprocessable_entity }
+    end
+  end
+
+
+#[7] If signed in... and Sign out
+#in some html.erb page
+<% if signed_in? %>
+  <%= link_to "Profile", current_user %>
+  <%= link_to "Profile, user_path(current_user) %>
+  <%= link_to "Sign out" , signout_path, method: "delete" %>
+<% else %>
+  #what general public sees
+<% end %>
+
+<%= link_to "Sign out", signout_path, method: "delete" %>
