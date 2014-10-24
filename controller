@@ -1,0 +1,36 @@
+rails generate controller Homes index sayHello waveGoodbye moreMethods
+rails generate controller hello index create
+      create  app/controllers/hello_controller.rb
+       route  get 'hello/create'
+       route  get 'hello/index'
+      invoke  erb
+      create    app/views/hello
+      create    app/views/hello/index.html.erb
+      create    app/views/hello/create.html.erb
+      invoke  test_unit
+      create    test/controllers/hello_controller_test.rb
+      invoke  helper
+      create    app/helpers/hello_helper.rb
+      invoke    test_unit
+      create      test/helpers/hello_helper_test.rb
+      invoke  assets
+      invoke    coffee
+      create      app/assets/javascripts/hello.js.coffee
+      invoke    scss
+      create      app/assets/stylesheets/hello.css.scss
+rails generate controller comeHome
+      create  app/controllers/come_home_controller.rb
+      invoke  erb
+      create    app/views/come_home
+      invoke  test_unit
+      create    test/controllers/come_home_controller_test.rb
+      invoke  helper
+      create    app/helpers/come_home_helper.rb
+      invoke    test_unit
+      create      test/helpers/come_home_helper_test.rb
+      invoke  assets
+      invoke    coffee
+      create      app/assets/javascripts/come_home.js.coffee
+      invoke    scss
+      create      app/assets/stylesheets/come_home.css.scss
+
